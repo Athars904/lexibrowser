@@ -24,117 +24,22 @@ class HomeScreen extends StatelessWidget {
     mq = MediaQuery.of(context).size;
     return SafeArea(
       child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Colors.blueAccent.withOpacity(0.3),
-              Colors.grey.withOpacity(0.3),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
+        color: Colors.transparent,
         child: Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             elevation: 0,
-            leading: Builder(
-              builder: (context) {
-                return IconButton(
-                  icon: const Icon(Icons.menu, color: Colors.white),
-                  onPressed: () {
-                    Scaffold.of(context).openDrawer();
-                  },
-                );
-              },
-            ),
             centerTitle: true,
             title: Text(
               'Lexi VPN',
               style: GoogleFonts.merriweather(
                 textStyle: const TextStyle(
-                  color: Colors.white,
+
                   fontWeight: FontWeight.bold,
                   fontSize: 20,
                   letterSpacing: 2.0,
                 ),
-              ),
-            ),
-          ),
-          drawer: Drawer(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.blueAccent.withOpacity(0.3),
-                    Colors.grey.withOpacity(0.3),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  Container(
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.blue,
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.blue.withOpacity(0.7),
-                          Colors.blue,
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'Menu',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.web, color: Colors.black),
-                    title: const Text(
-                      'Browser',
-                      style: TextStyle(color: Colors.black),
-                    ),
-                    onTap: () {
-                      Navigator.pop(context); // Close the drawer
-                      Get.to(() => BrowserPage()); // Navigate to BrowserScreen
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.forum, color: Colors.black),
-                    title: const Text(
-                      'Forums',
-                      style: TextStyle(color: Colors.black),
-                    ),
-                    onTap: () {
-                      // Handle navigation to Forums
-                      Navigator.pop(context);
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.vpn_lock, color: Colors.black),
-                    title: const Text(
-                      'VPN',
-                      style: TextStyle(color: Colors.black),
-                    ),
-                    onTap: () {
-                      // Handle navigation to VPN
-                      Navigator.pop(context);
-                    },
-                  ),
-                ],
               ),
             ),
           ),
@@ -244,7 +149,7 @@ class HomeScreen extends StatelessWidget {
                         ? 'Country'
                         : _controller.vpn.value.countryLong,
                     style: TextStyle(
-                      color: Colors.white,
+
                       fontSize: 20.0,
                       fontWeight: FontWeight.bold,
                       shadows: [

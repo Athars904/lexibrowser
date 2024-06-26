@@ -44,7 +44,7 @@ class VpnCard extends StatelessWidget {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
           title: Text(
             vpn.countryLong,
-            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           leading: Image.asset(
             'assets/flags/${vpn.countryShort.toLowerCase()}.png',
@@ -57,7 +57,7 @@ class VpnCard extends StatelessWidget {
               const SizedBox(width: 4),
               Text(
                 _formatBytes(vpn.speed, 1),
-                style: const TextStyle(color: Colors.black54),
+
               )
             ],
           ),
