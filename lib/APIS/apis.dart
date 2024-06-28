@@ -1,8 +1,8 @@
 import 'dart:developer';
 import 'package:csv/csv.dart';
 import 'package:http/http.dart';
-import 'package:madlyvpn/helpers/messages.dart';
-import 'package:madlyvpn/helpers/pref.dart';
+import 'package:lexibrowser/helpers/messages.dart';
+import 'package:lexibrowser/helpers/pref.dart';
 import '../models/vpn.dart';
 
 class APIs {

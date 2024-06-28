@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Add this import for SystemChrome
-import 'package:madlyvpn/screens/browser_screen.dart';
-import 'package:madlyvpn/screens/home_screen.dart';
+import 'package:lexibrowser/screens/browser_screen.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -19,7 +19,7 @@ class _SplashScreenState extends State<SplashScreen> {
     // Enable edge-to-edge system UI mode
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
-    // Delay opening the HomePage by 2 seconds
+    // Delay opening the HomePage by 200 seconds
     Future.delayed(const Duration(seconds: 2), () {
       Get.off(() => BrowserPage());
     });
@@ -29,40 +29,38 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/dark.jpg'),
-            fit: BoxFit.cover,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.indigo[900]!, Colors.blue[600]!],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
         ),
-        child: Center( // Center the content on the screen
+        child: Center(
           child: LayoutBuilder(
             builder: (context, constraints) {
               return Column(
+                mainAxisAlignment: MainAxisAlignment.center, // Center vertically
                 children: [
-                  const SizedBox(
-                    height: 200,
-                  ),
                   Center(
                     child: Image.asset(
-                      'assets/images/madly.png',
-                      width: constraints.maxHeight * 0.47,
-                      // Adjust the width according to the screen height
+                      'assets/images/br.png',
+                      height: 300,
+                      width: 300,
                     ),
                   ),
                   const SizedBox(
-                    height: 100,
+                    height: 1,
                   ),
-
-                  // Centered text
-                  const Center(
+                  Center(
                     child: Text(
-                      'THE PROXY OF MADNESS',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 2.0,
-                        color: Colors.white38,
+                      'Lexi Browser',
+                      style: GoogleFonts.rampartOne( // Apply Google Fonts
+                        textStyle: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                          fontSize: 32,
+                        ),
                       ),
                     ),
                   ),

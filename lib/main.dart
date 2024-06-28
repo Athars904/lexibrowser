@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:madlyvpn/screens/splash_screen.dart';
+import 'package:lexibrowser/screens/splash_screen.dart';
 import 'package:get/get.dart';
-import 'package:madlyvpn/helpers/pref.dart';
-import 'package:madlyvpn/screens/browser_screen.dart';
-import 'package:madlyvpn/controllers/theme_controller.dart'; // Add this import
+import 'package:lexibrowser/helpers/pref.dart';
+import 'package:lexibrowser/screens/browser_screen.dart';
+import 'package:lexibrowser/controllers/theme_controller.dart'; // Add this import
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

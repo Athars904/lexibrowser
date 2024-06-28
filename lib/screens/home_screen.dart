@@ -3,12 +3,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:madlyvpn/controllers/home_controller.dart';
-import 'package:madlyvpn/screens/location_screen.dart';
-import 'package:madlyvpn/widgets/home_card.dart';
+import 'package:lexibrowser/controllers/home_controller.dart';
+import 'package:lexibrowser/screens/location_screen.dart';
+import 'package:lexibrowser/widgets/home_card.dart';
 import '../models/vpn_status.dart';
 import '../services/vpn_engine.dart';
-import 'package:madlyvpn/screens/browser_screen.dart'; // Ensure this import
+import 'package:lexibrowser/screens/browser_screen.dart'; // Ensure this import
 
 late Size mq;
 

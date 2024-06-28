@@ -1,11 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:madlyvpn/screens/home_screen.dart';
+import 'package:flutter/widgets.dart';
+import 'package:lexibrowser/screens/home_screen.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cupertino_icons/cupertino_icons.dart';
-import 'package:madlyvpn/controllers/theme_controller.dart';
+import 'package:lexibrowser/controllers/theme_controller.dart';
 class BrowserPage extends StatefulWidget {
   const BrowserPage({super.key});
 
@@ -107,6 +108,7 @@ class _BrowserPageState extends State<BrowserPage> {
             preferredSize: const Size.fromHeight(60.0),
             child: Container(
               decoration: const BoxDecoration(
+
                 border: Border(
                   bottom: BorderSide(
                     color: Colors.grey,
@@ -115,7 +117,6 @@ class _BrowserPageState extends State<BrowserPage> {
                 ),
               ),
               child: AppBar(
-
                 leading: GestureDetector(
                   onTap: () {
                     showModalBottomSheet(
@@ -129,7 +130,6 @@ class _BrowserPageState extends State<BrowserPage> {
                     height: 10,
                   ),
                 ),
-
                 title: Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -153,14 +153,17 @@ class _BrowserPageState extends State<BrowserPage> {
                       ),
                       Expanded(
                         child: TextField(
+                          style: const TextStyle(color: Colors.black),
                           controller: textEditingController,
                           decoration: InputDecoration(
-
+                            helperStyle: const TextStyle(
+                                color: Colors.black
+                            ),
                             hintText: "Search or type web address",
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                             suffixIcon: IconButton(
-                              icon: const Icon(Icons.search),
+                              icon: const Icon(Icons.search, color: Colors.black,),
                               onPressed: () {
                                 loadUrl(textEditingController.text);
                               },
@@ -187,54 +190,138 @@ class _BrowserPageState extends State<BrowserPage> {
                       });
                     },
                   ),
-                  PopupMenuButton<String>(
-                    icon: const Icon(Icons.menu,),
-                    onSelected: (value) {
-                      switch (value) {
-                        case 'Bookmarks':
-                          showBookmarksDialog();
-                          break;
-                        case 'History':
-                          showHistoryDialog();
-                          break;
-                        case 'Toggle Theme':
-                          themeController.toggleTheme();
-                          break;
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'Bookmarks',
-                        child: ListTile(
-                          leading: Icon(Icons.bookmark),
-                          title: Text('Bookmarks'),
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'History',
-                        child: ListTile(
-                          leading: Icon(Icons.history),
-                          title: Text('History'),
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'Toggle Theme',
-                        child: Obx(() {
-                          return ListTile(
-                            leading: Icon(themeController.isDarkMode.value ? Icons.dark_mode : Icons.light_mode),
-                            title: Text(themeController.isDarkMode.value ? 'Dark Mode' : 'Light Mode'),
+                  IconButton(
+                    icon: const Icon(Icons.menu),
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        builder: (context) {
+                          return Container(
+                            padding: const EdgeInsets.all(16.0),
+                            decoration: const BoxDecoration(
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(20.0),
+                                topRight: Radius.circular(20.0),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 10.0,
+                                  spreadRadius: 5.0,
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  children: [
+                                    InkWell(
+                                      onTap: showBookmarksDialog,
+                                      child: const Column(
+                                        children: [
+                                          Icon(Icons.bookmark, size: 40, color: Colors.blue),
+                                          SizedBox(height: 8),
+                                          Text('Bookmark', style: TextStyle(fontSize: 14)),
+                                        ],
+                                      ),
+                                    ),
+                                    InkWell(
+                                      onTap: showTabSwitcherDialog,
+                                      child: const Column(
+                                        children: [
+                                          Icon(Icons.history, size: 40, color: Colors.green),
+                                          SizedBox(height: 8),
+                                          Text('History', style: TextStyle(fontSize: 14)),
+                                        ],
+                                      ),
+                                    ),
+                                    InkWell(
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                        themeController.toggleTheme();
+                                      },
+                                      child: Column(
+                                        children: [
+                                          Obx(() {
+                                            return Icon(
+                                              themeController.isDarkMode.value ? Icons.dark_mode : Icons.light_mode,
+                                              size: 40,
+                                              color: themeController.isDarkMode.value ? Colors.yellow : Colors.black,
+                                            );
+                                          }),
+                                          const SizedBox(height: 8),
+                                          Obx(() {
+                                            return Text(
+                                              themeController.isDarkMode.value ? 'Dark Mode' : 'Light Mode',
+                                              style: const TextStyle(fontSize: 14, ),
+                                            );
+                                          }),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(
+                                    height: 20),
+                                const Divider(
+
+                                  thickness: 2.0,
+                                ),
+                                const SizedBox(
+                                  height: 20,
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  children: [
+                                    InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          if (bookmarks.contains(tabs[currentIndex].url)) {
+                                            bookmarks.remove(tabs[currentIndex].url);
+                                          } else {
+                                            bookmarks.add(tabs[currentIndex].url);
+                                          }
+                                        });
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Column(
+                                        children: [
+                                          Icon(Icons.save, size: 40, color: Colors.red),
+                                          SizedBox(height: 8),
+                                          Text('Save Page', style: TextStyle(fontSize: 14)),
+                                        ],
+                                      ),
+                                    ),
+                                    const Column(
+                                      children: [
+                                        Icon(Icons.ad_units, size: 40, color: Colors.purple),
+                                        SizedBox(height: 8),
+                                        Text('Block Ads', style: TextStyle(fontSize: 14, )),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 40,
+                                )
+                              ],
+                            ),
                           );
-                        }),
-                      ),
-                    ],
+                        },
+                      );
+
+                    },
                   ),
                 ],
               ),
             ),
           ),
 
+
           body: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
 
                 ),
             child: Column(
@@ -374,19 +461,7 @@ class _BrowserPageState extends State<BrowserPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Text(
-          'Shortcuts',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 15),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildShortcutButton('Bookmarks', Icons.bookmark, showBookmarksDialog),
-            _buildShortcutButton('History', Icons.history, showHistoryDialog),
-            _buildShortcutButton('Recent Tabs', Icons.tab, showTabSwitcherDialog),
-          ],
-        ),
+
         const SizedBox(height: 30),
         const Text(
           'Services',
@@ -442,7 +517,7 @@ class _BrowserPageState extends State<BrowserPage> {
 
   Widget _buildBottomWidget() {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         border: Border(
           top: BorderSide(
             color: Colors.grey,
@@ -501,7 +576,6 @@ class _BrowserPageState extends State<BrowserPage> {
       context: context,
       builder: (context) {
         return Dialog(
-
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20.0),
           ),
@@ -509,7 +583,6 @@ class _BrowserPageState extends State<BrowserPage> {
             height: 400,
             padding: const EdgeInsets.all(16.0),
             decoration: BoxDecoration(
-
               borderRadius: BorderRadius.circular(20.0),
             ),
             child: Column(
@@ -517,7 +590,7 @@ class _BrowserPageState extends State<BrowserPage> {
               children: [
                 Row(
                   children: [
-                    Expanded(
+                    const Expanded(
                       child: Text(
                         'Tabs',
                         style: TextStyle(
@@ -527,7 +600,7 @@ class _BrowserPageState extends State<BrowserPage> {
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.add, color: Colors.blueAccent),
+                      icon: const Icon(Icons.add, color: Colors.blueAccent),
                       onPressed: () {
                         setState(() {
                           tabs.add(createNewTab(searchEngineUrl));
@@ -537,7 +610,7 @@ class _BrowserPageState extends State<BrowserPage> {
                       },
                     ),
                     IconButton(
-                      icon: Icon(Icons.close, color: Colors.redAccent),
+                      icon: const Icon(Icons.close, color: Colors.redAccent),
                       onPressed: () {
                         Navigator.of(context).pop();
                       },
@@ -547,7 +620,7 @@ class _BrowserPageState extends State<BrowserPage> {
                 const Divider(),
                 Expanded(
                   child: GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 3,
                       mainAxisSpacing: 15,
                       crossAxisSpacing: 15,
@@ -555,20 +628,20 @@ class _BrowserPageState extends State<BrowserPage> {
                     ),
                     itemCount: tabs.length,
                     itemBuilder: (context, index) {
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            currentIndex = index;
-                          });
-                          Navigator.of(context).pop();
-                        },
-                        child: Stack(
-                          children: [
-                            Container(
+                      return Stack(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                currentIndex = index;
+                              });
+                              Navigator.of(context).pop();
+                            },
+                            child: Container(
                               decoration: BoxDecoration(
                                 color: index == currentIndex ? Colors.blueAccent.withOpacity(0.1) : Colors.transparent,
                                 borderRadius: BorderRadius.circular(10),
-                                boxShadow: [
+                                boxShadow: const [
                                   BoxShadow(
                                     color: Colors.black26,
                                     blurRadius: 4,
@@ -590,12 +663,12 @@ class _BrowserPageState extends State<BrowserPage> {
                                           height: 50,
                                           width: 50,
                                           color: Colors.grey[300],
-                                          child: Icon(Icons.language, color: Colors.grey),
+                                          child: const Icon(Icons.language, color: Colors.grey),
                                         );
                                       },
                                     ),
                                   ),
-                                  SizedBox(height: 10),
+                                  const SizedBox(height: 10),
                                   Text(
                                     getDomainName(tabs[index].url),
                                     style: TextStyle(
@@ -609,27 +682,40 @@ class _BrowserPageState extends State<BrowserPage> {
                                 ],
                               ),
                             ),
-                            Positioned(
-                              top: 0,
-                              right: 0,
-                              child: IconButton(
-                                icon: Icon(Icons.close, color: Colors.red),
-                                onPressed: () {
-                                  setState(() {
-                                    if (tabs.length > 1) {
-                                      tabs.removeAt(index);
-                                      if (currentIndex >= index && currentIndex > 0) {
-                                        currentIndex--;
-                                      }
+                          ),
+                          Positioned(
+                            top: 0,
+                            right: -2,
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  if (tabs.length > 1) {
+                                    tabs.removeAt(index);
+                                    if (currentIndex >= index && currentIndex > 0) {
+                                      currentIndex--;
                                     }
-                                  });
-                                  Navigator.of(context).pop();
-                                  showTabSwitcherDialog(); // Reopen dialog to reflect changes
-                                },
+                                  }
+                                });
+                                Navigator.of(context).pop();
+                                showTabSwitcherDialog(); // Reopen dialog to reflect changes
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(4.0),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Colors.black26,
+                                      blurRadius: 4,
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(Icons.close, color: Colors.red, size: 16),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       );
                     },
                   ),
@@ -641,6 +727,7 @@ class _BrowserPageState extends State<BrowserPage> {
       },
     );
   }
+
 
 
   String getFaviconUrl(String url) {
@@ -685,7 +772,6 @@ class _BrowserPageState extends State<BrowserPage> {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.white70,
         title: const Text('Bookmarks'),
         content: SizedBox(
           width: double.maxFinite,
@@ -700,12 +786,12 @@ class _BrowserPageState extends State<BrowserPage> {
                   width: 24,
                   height: 24,
                   errorBuilder: (context, error, stackTrace) {
-                    return const Icon(Icons.language, color: Colors.grey);
+                    return const Icon(Icons.language);
                   },
                 ),
                 title: Text(
                   bookmark,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     color: Colors.blueAccent,
@@ -768,7 +854,7 @@ class _BrowserPageState extends State<BrowserPage> {
                 ),
                 title: Text(
                   history[index],
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     color: Colors.blueAccent,

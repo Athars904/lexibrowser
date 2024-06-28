@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
-import 'package:madlyvpn/helpers/pref.dart';
-import 'package:madlyvpn/models/vpn.dart';
-import 'package:madlyvpn/APIS/apis.dart';
+import 'package:lexibrowser/helpers/pref.dart';
+import 'package:lexibrowser/models/vpn.dart';
+import 'package:lexibrowser/APIS/apis.dart';
 class LocationController extends GetxController{
   List<Vpn> vpnList = Pref.vpnList;
 

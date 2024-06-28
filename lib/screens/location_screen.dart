@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:madlyvpn/controllers/location_controller.dart';
+import 'package:lexibrowser/controllers/location_controller.dart';
 import 'package:get/get.dart';
-import 'package:madlyvpn/widgets/vpncard.dart';
+import 'package:lexibrowser/widgets/vpncard.dart';
 
 late Size mq;
 

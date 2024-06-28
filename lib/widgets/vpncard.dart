@@ -1,14 +1,13 @@
 import 'dart:math';
 import 'package:get/get.dart';
-import 'package:madlyvpn/controllers/home_controller.dart';
+import 'package:lexibrowser/controllers/home_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:madlyvpn/helpers/messages.dart';
-import 'package:madlyvpn/models/vpn.dart';
-import 'package:madlyvpn/services/vpn_engine.dart';
-import 'package:madlyvpn/helpers/pref.dart';
+import 'package:lexibrowser/helpers/messages.dart';
+import 'package:lexibrowser/models/vpn.dart';
+import 'package:lexibrowser/services/vpn_engine.dart';
+import 'package:lexibrowser/helpers/pref.dart';
 late Size mq;
-
 class VpnCard extends StatelessWidget {
   final Vpn vpn;
 
@@ -40,7 +39,6 @@ class VpnCard extends StatelessWidget {
           }
         },
         child: ListTile(
-          textColor: Colors.white38,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
           title: Text(
             vpn.countryLong,

@@ -1,11 +1,11 @@
 import 'package:get/get.dart';
-import 'package:madlyvpn/helpers/messages.dart';
-import 'package:madlyvpn/services/vpn_engine.dart';
+import 'package:lexibrowser/helpers/messages.dart';
+import 'package:lexibrowser/services/vpn_engine.dart';
 import 'package:flutter/material.dart';
-import 'package:madlyvpn/models/vpn.dart';
+import 'package:lexibrowser/models/vpn.dart';
 import 'dart:convert';
-import 'package:madlyvpn/models/vpn_config.dart';
-import 'package:madlyvpn/helpers/pref.dart';
+import 'package:lexibrowser/models/vpn_config.dart';
+import 'package:lexibrowser/helpers/pref.dart';
 class HomeController extends GetxController{
   RxString vpnState = VpnEngine.vpnDisconnected.obs;
   final Rx<Vpn> vpn = Pref.vpn.obs;
