@@ -11,7 +11,8 @@
         android:label="lexibrowser"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:usesCleartextTraffic="true"> <!-- Enable cleartext traffic -->
+        android:usesCleartextTraffic="true"
+        android:enableOnBackInvokedCallback="true"> <!-- Enable OnBackInvokedCallback -->
 
         <activity
             android:name=".MainActivity"

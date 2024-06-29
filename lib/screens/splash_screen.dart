@@ -3,6 +3,7 @@ import 'package:flutter/services.dart'; // Add this import for SystemChrome
 import 'package:lexibrowser/screens/browser_screen.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lexibrowser/screens/home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

@@ -1,12 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:lexibrowser/screens/forums_screen.dart';
 import 'package:lexibrowser/screens/home_screen.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cupertino_icons/cupertino_icons.dart';
 import 'package:lexibrowser/controllers/theme_controller.dart';
+import 'package:lexibrowser/screens/user_profile.dart';
 class BrowserPage extends StatefulWidget {
   const BrowserPage({super.key});
 
@@ -228,7 +230,7 @@ class _BrowserPageState extends State<BrowserPage> {
                                       ),
                                     ),
                                     InkWell(
-                                      onTap: showTabSwitcherDialog,
+                                      onTap: showHistoryDialog,
                                       child: const Column(
                                         children: [
                                           Icon(Icons.history, size: 40, color: Colors.green),
@@ -301,6 +303,19 @@ class _BrowserPageState extends State<BrowserPage> {
                                         Text('Block Ads', style: TextStyle(fontSize: 14, )),
                                       ],
                                     ),
+                                    InkWell(
+                                      onTap: (){
+                                        Get.to(()=> Profile());
+                                      },
+                                      child: const Column(
+                                        children: [
+                                          Icon(Icons.person, size: 40, color: Colors.purple),
+                                          SizedBox(height: 8),
+                                          Text('User Profile', style: TextStyle(fontSize: 14, )),
+                                        ],
+                                      ),
+                                    ),
+
                                   ],
                                 ),
                                 const SizedBox(
@@ -672,7 +687,7 @@ class _BrowserPageState extends State<BrowserPage> {
                                   Text(
                                     getDomainName(tabs[index].url),
                                     style: TextStyle(
-                                      color: index == currentIndex ? Colors.blueAccent : Colors.black,
+                                      color: index == currentIndex ? Colors.blueAccent : Colors.white,
                                       fontWeight: index == currentIndex ? FontWeight.bold : FontWeight.normal,
                                     ),
                                     textAlign: TextAlign.center,
@@ -960,8 +975,7 @@ class _BrowserPageState extends State<BrowserPage> {
 
   void showForumsPage() {
     setState(() {
-      tabs.add(createNewTab('https://forums.example.com')); // Replace with actual Forums page URL
-      currentIndex = tabs.length - 1;
+      Get.to(()=>ChatScreen());
     });
   }
 }
