@@ -4,6 +4,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:lexibrowser/controllers/profile_controller.dart';
 import 'dart:io';
 import 'package:lexibrowser/screens/browser_screen.dart';
+import 'package:lexibrowser/screens/privacy_policy.dart';
+import 'package:lexibrowser/screens/term_conditions.dart';
 
 class Profile extends StatefulWidget {
   @override
@@ -35,7 +37,7 @@ class _ProfileState extends State<Profile> {
                         maxRadius: 65,
                         backgroundImage: profileController.profileImagePath.value.isNotEmpty
                             ? FileImage(File(profileController.profileImagePath.value))
-                            : AssetImage("assets/images/vpn2.png") as ImageProvider,
+                            : const AssetImage("assets/images/vpn2.png") as ImageProvider,
                       );
                     }),
                   ),
@@ -64,7 +66,7 @@ class _ProfileState extends State<Profile> {
                   children: [
                     Text(
                       profileController.userName.value,
-                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 26),
+                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 26),
                     ),
                   ],
                 );
@@ -101,21 +103,45 @@ class _ProfileState extends State<Profile> {
               Expanded(
                 child: ListView(
                   children: [
-                    Card(
-                      margin: const EdgeInsets.only(left: 35, right: 35, bottom: 10),
-                      color: Colors.white70,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                      child: const ListTile(
-                        leading: Icon(Icons.privacy_tip_sharp, color: Colors.black54),
-                        title: Text('Privacy', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        trailing: Icon(Icons.arrow_forward_ios_outlined, color: Colors.black54),
+                    InkWell(
+                      onTap: ()
+                      {
+                        Get.to(()=>PrivacyPolicyScreen());
+                      },
+                      child: Card(
+                        margin: const EdgeInsets.only(left: 35, right: 35, bottom: 10),
+                        color: Colors.white70,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                        child: const ListTile(
+                          leading: Icon(Icons.privacy_tip_sharp, color: Colors.black54),
+                          title: Text('Privacy', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          trailing: Icon(Icons.arrow_forward_ios_outlined, color: Colors.black54),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+                    InkWell(
+                      onTap: ()
+                      {
+                        Get.to(()=>const TermsConditionsScreen());
+                      },
+                      child: Card(
+                        margin: const EdgeInsets.only(left: 35, right: 35, bottom: 10),
+                        color: Colors.white70,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                        child: const ListTile(
+                          leading: Icon(Icons.pending_actions_sharp, color: Colors.black54),
+                          title: Text('Terms & Conditions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          trailing: Icon(Icons.arrow_forward_ios_outlined, color: Colors.black54),
+                        ),
                       ),
                     ),
 
                     const SizedBox(height: 10),
                     InkWell(
                       onTap: () {
-                        Get.to(() => BrowserPage());
+                        Get.back();
                       },
                       child: Card(
                         color: Colors.white70,

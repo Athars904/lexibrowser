@@ -6,13 +6,17 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <application
         android:label="lexibrowser"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true"
-        android:enableOnBackInvokedCallback="true"> <!-- Enable OnBackInvokedCallback -->
+        android:enableOnBackInvokedCallback="true"
+        android:extractNativeLibs="true"
+        android:requestLegacyExternalStorage="true">
+
 
         <activity
             android:name=".MainActivity"

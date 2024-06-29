@@ -29,6 +29,7 @@ class _BrowserPageState extends State<BrowserPage> {
   late TextEditingController textEditingController;
   late List<BrowserTab> tabs;
   int currentIndex = 0;
+  late FocusNode focusNode;
   String searchEngineUrl = "https://www.google.com/";
   Set<String> bookmarks = {};
   List<Map<String, dynamic>> speedDials = [
@@ -64,14 +65,33 @@ class _BrowserPageState extends State<BrowserPage> {
   void initState() {
     super.initState();
     textEditingController = TextEditingController();
+    focusNode = FocusNode(); // Initialize FocusNode
+
+    focusNode.addListener(() {
+      if(!focusNode.hasFocus)
+      {
+        focusNode.unfocus();
+      }
+      if (focusNode.hasFocus) {
+        textEditingController.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: textEditingController.text.length,
+        );
+      }
+
+    });
+
+
     tabs = [createNewTab(searchEngineUrl)];
   }
 
   @override
   void dispose() {
     textEditingController.dispose();
+    focusNode.dispose(); // Dispose of FocusNode
     super.dispose();
   }
+
 
   BrowserTab createNewTab(String url) {
     final controller = WebViewController();
@@ -155,17 +175,18 @@ class _BrowserPageState extends State<BrowserPage> {
                       ),
                       Expanded(
                         child: TextField(
+                          focusNode: focusNode, // Use the FocusNode
                           style: const TextStyle(color: Colors.black),
                           controller: textEditingController,
                           decoration: InputDecoration(
                             helperStyle: const TextStyle(
-                                color: Colors.black
+                              color: Colors.black,
                             ),
                             hintText: "Search or type web address",
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                             suffixIcon: IconButton(
-                              icon: const Icon(Icons.search, color: Colors.black,),
+                              icon: const Icon(Icons.search, color: Colors.black),
                               onPressed: () {
                                 loadUrl(textEditingController.text);
                               },
@@ -173,6 +194,7 @@ class _BrowserPageState extends State<BrowserPage> {
                           ),
                           onSubmitted: (value) {
                             loadUrl(value);
+                            focusNode.unfocus();
                           },
                         ),
                       ),
@@ -336,9 +358,9 @@ class _BrowserPageState extends State<BrowserPage> {
 
 
           body: Container(
-                decoration: const BoxDecoration(
+            decoration: const BoxDecoration(
 
-                ),
+            ),
             child: Column(
               children: [
                 Expanded(child: AnimatedOpacity(
@@ -364,16 +386,23 @@ class _BrowserPageState extends State<BrowserPage> {
   }
 
   void loadUrl(String value) {
-    Uri uri = Uri.parse(value);
-    if (!uri.isAbsolute) {
-      uri = Uri.parse("${searchEngineUrl}search?q=$value");
+    Uri uri;
+    // Check if the value starts with "http://" or "https://" to determine if it's a valid URL
+    if (value.startsWith("http://") || value.startsWith("https://")) {
+      uri = Uri.parse(value);
+    } else {
+      // If not, prepend "http://" to the value to create a valid URL
+      uri = Uri.parse("http://$value");
     }
+
     setState(() {
       tabs[currentIndex].url = uri.toString();
       textEditingController.text = uri.toString(); // Update the search bar with the current URL
+      focusNode.unfocus(); // Remove focus from the TextField
     });
     tabs[currentIndex].controller.loadRequest(uri);
   }
+
 
 
   Widget _buildCurrentPage() {

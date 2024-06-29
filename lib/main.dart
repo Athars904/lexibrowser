@@ -8,12 +8,14 @@ import 'package:lexibrowser/controllers/theme_controller.dart'; // Add this impo
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'controllers/profile_controller.dart';
+import 'package:permission_handler/permission_handler.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await Permission.storage.request();
   await Pref.initializeHive();
   // await FlutterDownloader.initialize(debug: true);
   Get.put(ProfileController());
