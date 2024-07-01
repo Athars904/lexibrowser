@@ -60,6 +60,7 @@ android {
         implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
         implementation 'androidx.multidex:multidex:2.0.1'
         implementation 'androidx.work:work-runtime:2.7.0'
+        implementation 'com.google.android.gms:play-services-ads:23.2.0'
     }
 }
 

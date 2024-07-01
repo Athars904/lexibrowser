@@ -17,6 +17,10 @@
         android:extractNativeLibs="true"
         android:requestLegacyExternalStorage="true">
 
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-2759752580796233~8949296742"/>
+
 
         <activity
             android:name=".MainActivity"

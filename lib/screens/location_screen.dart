@@ -3,6 +3,9 @@ import 'package:lottie/lottie.dart';
 import 'package:lexibrowser/controllers/location_controller.dart';
 import 'package:get/get.dart';
 import 'package:lexibrowser/widgets/vpncard.dart';
+import 'package:lexibrowser/controllers/nativeadcontroller.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:lexibrowser/helpers/adhelper.dart';
 
 late Size mq;
 
@@ -10,12 +13,17 @@ class LocationScreen extends StatelessWidget {
   LocationScreen({Key? key});
 
   final _controller = LocationController();
+  final _adController=NativeAdController();
 
   @override
   Widget build(BuildContext context) {
     if (_controller.vpnList.isEmpty) _controller.getVPNData();
     mq = MediaQuery.of(context).size;
+    _adController.ad=AdHelper.loadNativeAd(_adController);
     return Obx(() => Scaffold(
+      bottomNavigationBar:
+      _adController.ad!=null&& _adController.adLoaded.isTrue?
+      SafeArea(child: SizedBox(height: 80,child: AdWidget(ad: _adController.ad!),)):null,
       backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton(
         onPressed: () => _controller.getVPNData(),

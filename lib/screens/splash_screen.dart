@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Add this import for SystemChrome
+import 'package:lexibrowser/helpers/adhelper.dart';
 import 'package:lexibrowser/screens/browser_screen.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -22,6 +23,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
     // Delay opening the HomePage by 200 seconds
     Future.delayed(const Duration(seconds: 2), () {
+  AdHelper.precacheInterstitialAd();
+  AdHelper.precacheNativeAd();
+  AdHelper.loadAppOpen();
       Get.off(() => BrowserPage());
     });
   }

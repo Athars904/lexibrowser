@@ -1,14 +1,21 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:lexibrowser/helpers/adhelper.dart';
 import 'package:lexibrowser/screens/forums_screen.dart';
 import 'package:lexibrowser/screens/home_screen.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:cupertino_icons/cupertino_icons.dart';
 import 'package:lexibrowser/controllers/theme_controller.dart';
 import 'package:lexibrowser/screens/user_profile.dart';
+import 'dart:async';
+import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:lexibrowser/controllers/nativeadcontroller.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:lexibrowser/helpers/adhelper.dart';
+final _adController=NativeAdController();
 class BrowserPage extends StatefulWidget {
   const BrowserPage({super.key});
 
@@ -43,17 +50,6 @@ class _BrowserPageState extends State<BrowserPage> {
     {"title": "TikTok", "url": "https://www.tiktok.com", "icon": "https://www.tiktok.com/favicon.ico", "isAsset": false},
 
   ];
-  // Inside _BrowserPageState class, add this method to create the theme toggle button
-  Widget _buildThemeToggleButton() {
-    final ThemeController themeController = Get.find();
-    return IconButton(
-      icon: Icon(themeController.isDarkMode.value ? Icons.dark_mode : Icons.light_mode),
-      onPressed: themeController.toggleTheme,
-    );
-  }
-
-
-
 
 
 
@@ -80,10 +76,9 @@ class _BrowserPageState extends State<BrowserPage> {
       }
 
     });
-
-
     tabs = [createNewTab(searchEngineUrl)];
   }
+
 
   @override
   void dispose() {
@@ -121,6 +116,7 @@ class _BrowserPageState extends State<BrowserPage> {
 
   @override
   Widget build(BuildContext context) {
+    _adController.ad=AdHelper.loadNativeAd(_adController);
     final ThemeController themeController=Get.find();
     return SafeArea(
       child: WillPopScope(
@@ -141,10 +137,13 @@ class _BrowserPageState extends State<BrowserPage> {
               child: AppBar(
                 leading: GestureDetector(
                   onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      builder: (context) => HomeScreen(),
-                    );
+                    AdHelper.showInterstitialAd(onComplete: ()
+                    {
+                      showModalBottomSheet(
+                        context: context,
+                        builder: (context) => HomeScreen(),
+                      );
+                    });
                   },
                   child: Image.asset(
                     'assets/images/vpn2.png',  // Replace with your asset path
@@ -263,8 +262,10 @@ class _BrowserPageState extends State<BrowserPage> {
                                     ),
                                     InkWell(
                                       onTap: () {
-                                        Navigator.pop(context);
-                                        themeController.toggleTheme();
+                                        AdHelper.showInterstitialAd(onComplete: (){
+                                          Navigator.pop(context);
+                                          themeController.toggleTheme();
+                                        });
                                       },
                                       child: Column(
                                         children: [
@@ -519,6 +520,7 @@ class _BrowserPageState extends State<BrowserPage> {
             _buildShortcutButton('Forums', Icons.forum, showForumsPage),
           ],
         ),
+
       ],
     );
   }
