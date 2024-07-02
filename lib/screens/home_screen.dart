@@ -8,6 +8,7 @@ import 'package:lexibrowser/screens/location_screen.dart';
 import 'package:lexibrowser/widgets/home_card.dart';
 import '../models/vpn_status.dart';
 import '../services/vpn_engine.dart';
+import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:lexibrowser/screens/browser_screen.dart'; // Ensure this import
 
 late Size mq;
@@ -47,6 +48,7 @@ class HomeScreen extends StatelessWidget {
             button: true,
             child: InkWell(
               onTap: () {
+                
                 showModalBottomSheet(
                   context: context,
                   builder: (context) => LocationScreen(),
@@ -106,68 +108,70 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
           ),
-          body: Obx(() => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                height: mq.height * .10,
-                width: double.maxFinite,
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
-                          blurRadius: 1,
-                          offset: const Offset(0, 1),
+          body: Obx(() => SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  height: mq.height * .10,
+                  width: double.maxFinite,
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 1,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: ClipOval(
+                        child: _controller.vpn.value.countryShort.isNotEmpty
+                            ? Image.asset(
+                          'assets/flags/${_controller.vpn.value.countryShort.toLowerCase()}.png',
+                          width: 25.0,
+                          height: 25.0,
+                          fit: BoxFit.cover,
+                        )
+                            : const Icon(
+                          Icons.public, // World icon
+                          size: 25.0,
+                          color: Colors.black,
                         ),
-                      ],
-                    ),
-                    child: ClipOval(
-                      child: _controller.vpn.value.countryShort.isNotEmpty
-                          ? Image.asset(
-                        'assets/flags/${_controller.vpn.value.countryShort.toLowerCase()}.png',
-                        width: 25.0,
-                        height: 25.0,
-                        fit: BoxFit.cover,
-                      )
-                          : const Icon(
-                        Icons.public, // World icon
-                        size: 25.0,
-                        color: Colors.black,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    _controller.vpn.value.countryLong.isEmpty
-                        ? 'Country'
-                        : _controller.vpn.value.countryLong,
-                    style: TextStyle(
-
-                      fontSize: 20.0,
-                      fontWeight: FontWeight.bold,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withOpacity(0.3),
-                          blurRadius: 2,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                    const SizedBox(width: 8),
+                    Text(
+                      _controller.vpn.value.countryLong.isEmpty
+                          ? 'Country'
+                          : _controller.vpn.value.countryLong,
+                      style: TextStyle(
+            
+                        fontSize: 20.0,
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 2,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(
-                height: 15,
-              ),
-              _vpnButton(),
-            ],
+                  ],
+                ),
+                const SizedBox(
+                  height: 15,
+                ),
+                _vpnButton(),
+              ],
+            ),
           )),
         ),
       ),

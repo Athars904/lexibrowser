@@ -11,4 +11,10 @@ class MyMessages{
   {
     Get.snackbar('Hey! ', message,colorText: Colors.white,backgroundColor: Colors.orangeAccent);
   }
+  static progress()
+  {
+    Get.dialog(const Center(child: CircularProgressIndicator(
+      strokeWidth: 2,
+    ),));
+  }
 }

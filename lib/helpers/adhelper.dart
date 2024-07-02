@@ -3,7 +3,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter/material.dart'; // Import the correct package for VoidCallback
 import 'package:get/get.dart';
 import 'package:lexibrowser/controllers/nativeadcontroller.dart';
-
+import 'package:lexibrowser/helpers/messages.dart';
 class AdHelper {
   static Future<void> initAds() async {
     await MobileAds.instance.initialize();
@@ -44,11 +44,13 @@ class AdHelper {
   }
 
   static void showInterstitialAd({required VoidCallback onComplete}) {
+
     if (_interstitialAdLoaded && _interstitialAd != null) {
       _interstitialAd?.show();
       onComplete();
       return;
     }
+    MyMessages.progress();
     InterstitialAd.load(
       adUnitId: 'ca-app-pub-2759752580796233/7305042586',
       request: const AdRequest(),
@@ -73,6 +75,7 @@ class AdHelper {
   }
   static void precacheNativeAd() {
     log('Precache Native Ad - Id: ca-app-pub-2759752580796233/5288634789');
+
 
     _nativeAd = NativeAd(
         adUnitId: 'ca-app-pub-2759752580796233/5288634789',
@@ -100,7 +103,6 @@ class AdHelper {
   }
 
   static NativeAd? loadNativeAd(NativeAdController adController) {
-
     if (_nativeAdLoaded && _nativeAd != null) {
       adController.adLoaded.value = true;
       return _nativeAd;

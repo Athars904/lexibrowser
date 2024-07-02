@@ -1,3 +1,5 @@
+import 'dart:developer';
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -9,12 +11,15 @@ import 'package:get/get.dart';
 import 'package:lexibrowser/controllers/theme_controller.dart';
 import 'package:lexibrowser/screens/user_profile.dart';
 import 'dart:async';
-import 'package:flutter_downloader/flutter_downloader.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:lexibrowser/controllers/nativeadcontroller.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:lexibrowser/helpers/adhelper.dart';
+import 'package:dio/dio.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
+import 'package:open_file/open_file.dart';
+
 final _adController=NativeAdController();
 class BrowserPage extends StatefulWidget {
   const BrowserPage({super.key});
@@ -33,10 +38,16 @@ class BrowserTab {
 }
 
 class _BrowserPageState extends State<BrowserPage> {
+  double pageLoadProgress = 0.0;
+  bool showSpinner=false;
   late TextEditingController textEditingController;
   late List<BrowserTab> tabs;
   int currentIndex = 0;
   late FocusNode focusNode;
+  final ThemeController themeController = Get.put(ThemeController());
+  var isDarkMode = false.obs;
+  String downloadProgress = "";
+  List<String> downloadedFiles = [];
   String searchEngineUrl = "https://www.google.com/";
   Set<String> bookmarks = {};
   List<Map<String, dynamic>> speedDials = [
@@ -50,7 +61,13 @@ class _BrowserPageState extends State<BrowserPage> {
     {"title": "TikTok", "url": "https://www.tiktok.com", "icon": "https://www.tiktok.com/favicon.ico", "isAsset": false},
 
   ];
-
+  Widget _buildThemeToggleButton() {
+    final ThemeController themeController = Get.find();
+    return IconButton(
+      icon: Icon(themeController.isDarkMode.value ? Icons.dark_mode : Icons.light_mode),
+      onPressed: themeController.toggleTheme,
+    );
+  }
 
 
   double opacityLevel = 1.0;
@@ -61,11 +78,10 @@ class _BrowserPageState extends State<BrowserPage> {
   void initState() {
     super.initState();
     textEditingController = TextEditingController();
-    focusNode = FocusNode(); // Initialize FocusNode
+    focusNode = FocusNode();
 
     focusNode.addListener(() {
-      if(!focusNode.hasFocus)
-      {
+      if (!focusNode.hasFocus) {
         focusNode.unfocus();
       }
       if (focusNode.hasFocus) {
@@ -74,8 +90,8 @@ class _BrowserPageState extends State<BrowserPage> {
           extentOffset: textEditingController.text.length,
         );
       }
-
     });
+
     tabs = [createNewTab(searchEngineUrl)];
   }
 
@@ -96,6 +112,12 @@ class _BrowserPageState extends State<BrowserPage> {
         setState(() {
           tabs[currentIndex].url = url;
           tabs[currentIndex].isLoading = true;
+          pageLoadProgress = 0.0; // Reset progress when page starts loading
+        });
+      },
+      onProgress: (progress) {
+        setState(() {
+          pageLoadProgress = progress / 100.0; // Update progress
         });
       },
       onPageFinished: (url) {
@@ -103,15 +125,98 @@ class _BrowserPageState extends State<BrowserPage> {
           tabs[currentIndex].url = url;
           textEditingController.text = url; // Update the search bar with the current URL
           tabs[currentIndex].isLoading = false;
+          pageLoadProgress = 0.0; // Reset progress when page finishes loading
           if (!history.contains(url)) {
             history.add(url);
           }
         });
       },
+      onNavigationRequest: (NavigationRequest request) {
+        if (_isDownloadable(request.url)) {
+          downloadFile(request.url);
+          return NavigationDecision.prevent;
+        }
+        return NavigationDecision.navigate;
+      },
     ));
     controller.loadRequest(Uri.parse(url));
     return BrowserTab(controller: controller, url: url, bookmarks: {});
   }
+
+
+  bool _isDownloadable(String url) {
+    return url.endsWith('.pdf') || url.endsWith('.doc') || url.endsWith('.docx') || url.endsWith('.xls') || url.endsWith('.xlsx') || url.endsWith('.ppt') || url.endsWith('.pptx') || url.endsWith('.txt') || url.endsWith('.rtf') || url.endsWith('.csv') || url.endsWith('.zip') || url.endsWith('.rar') || url.endsWith('.7z') || url.endsWith('.tar') || url.endsWith('.gz') || url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.png') || url.endsWith('.gif') || url.endsWith('.bmp') || url.endsWith('.tiff') || url.endsWith('.svg') || url.endsWith('.mp3') || url.endsWith('.wav') || url.endsWith('.flac') || url.endsWith('.aac') || url.endsWith('.ogg') || url.endsWith('.wma') || url.endsWith('.mp4') || url.endsWith('.avi') || url.endsWith('.mov') || url.endsWith('.mkv') || url.endsWith('.wmv') || url.endsWith('.flv') || url.endsWith('.webm') || url.endsWith('.m4v') || url.endsWith('.html') || url.endsWith('.css') || url.endsWith('.js') || url.endsWith('.json') || url.endsWith('.xml') || url.endsWith('.yaml') || url.endsWith('.md') || url.endsWith('.markdown') || url.endsWith('.py') || url.endsWith('.c') || url.endsWith('.cpp') || url.endsWith('.h') || url.endsWith('.hpp') || url.endsWith('.java') || url.endsWith('.class') || url.endsWith('.cs') || url.endsWith('.swift') || url.endsWith('.kt') || url.endsWith('.kts') || url.endsWith('.rb') || url.endsWith('.pl') || url.endsWith('.php') || url.endsWith('.go') || url.endsWith('.rs') || url.endsWith('.ts') || url.endsWith('.tsx') || url.endsWith('.sh') || url.endsWith('.bat') || url.endsWith('.ps1') || url.endsWith('.sql') || url.endsWith('.r') || url.endsWith('.jl') || url.endsWith('.lua') || url.endsWith('.asm') || url.endsWith('.vb') || url.endsWith('.m') || url.endsWith('.mat') || url.endsWith('.sas') || url.endsWith('.scala') || url.endsWith('.groovy') || url.endsWith('.vbs') || url.endsWith('.htm') || url.endsWith('.tex') || url.endsWith('.rmd') || url.endsWith('.ipynb');
+
+  }
+
+  Future<String?> getDownloadPath() async {
+    Directory? directory;
+    try {
+      if (Platform.isIOS) {
+        directory = await getApplicationDocumentsDirectory();
+      } else {
+        directory = Directory('/storage/emulated/0/Download');
+        // Put file in global download folder, if for an unknown reason it didn't exist, we fallback
+        // ignore: avoid_slow_async_io
+        if (!await directory.exists()) directory = await getExternalStorageDirectory();
+      }
+    } catch (err, stack) {
+      print("Cannot get download folder path");
+    }
+    return directory?.path;
+  }
+
+  void downloadFile(String url) async {
+    if (await Permission.storage.isDenied || await Permission.storage.isPermanentlyDenied) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Storage permission denied. Please enable it in settings.')),
+      );
+      return;
+    }
+
+    var status = await Permission.storage.request();
+    if (status.isGranted) {
+      var dio = Dio();
+      var dir = await getDownloadPath(); // Use getDownloadPath method
+
+      try {
+        String fileName = url.split('/').last;
+        String filePath = "$dir/$fileName"; // Use the download path
+        await dio.download(
+          url,
+          filePath,
+          onReceiveProgress: (received, total) {
+            if (total != -1) {
+              setState(() {
+                downloadProgress = (received / total * 100).toStringAsFixed(0) + "%";
+              });
+            }
+          },
+        );
+        setState(() {
+          downloadedFiles.add(filePath);
+          downloadProgress = ""; // Reset the progress
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Download completed: $fileName')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Download failed: $e')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Storage permission denied')),
+      );
+      if (status.isPermanentlyDenied) {
+        openAppSettings();
+      }
+    }
+  }
+
+
+
 
 
   @override
@@ -126,7 +231,6 @@ class _BrowserPageState extends State<BrowserPage> {
             preferredSize: const Size.fromHeight(60.0),
             child: Container(
               decoration: const BoxDecoration(
-
                 border: Border(
                   bottom: BorderSide(
                     color: Colors.grey,
@@ -134,241 +238,229 @@ class _BrowserPageState extends State<BrowserPage> {
                   ),
                 ),
               ),
-              child: AppBar(
-                leading: GestureDetector(
-                  onTap: () {
-                    AdHelper.showInterstitialAd(onComplete: ()
-                    {
+              child: ModalProgressHUD(
+                inAsyncCall: showSpinner,
+                child: AppBar(
+                  leading: GestureDetector(
+                    onTap: () {
                       showModalBottomSheet(
                         context: context,
                         builder: (context) => HomeScreen(),
                       );
-                    });
-                  },
-                  child: Image.asset(
-                    'assets/images/vpn2.png',  // Replace with your asset path
-                    width: 10,  // Adjust size as needed
-                    height: 10,
+                    },
+                    child: Image.asset(
+                      'assets/images/vpn2.png', // Replace with your asset path
+                      width: 10, // Adjust size as needed
+                      height: 10,
+                    ),
                   ),
-                ),
-                title: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 4,
-                      ),
-                    ],
-                  ),
-                  child: Row(
+                  title: Column(
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 10.0),
-                        child: Image.network(
-                          'https://www.google.com/favicon.ico',
-                          width: 24,
-                          height: 24,
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(left: 10.0),
+                              child: Image.network(
+                                'https://www.google.com/favicon.ico',
+                                width: 24,
+                                height: 24,
+                              ),
+                            ),
+                            Expanded(
+                              child: TextField(
+                                focusNode: focusNode, // Use the FocusNode
+                                style: const TextStyle(color: Colors.black),
+                                controller: textEditingController,
+                                decoration: InputDecoration(
+                                  helperStyle: const TextStyle(
+                                    color: Colors.black,
+                                  ),
+                                  hintText: "Search or type web address",
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                  suffixIcon: IconButton(
+                                    icon: const Icon(Icons.search, color: Colors.black),
+                                    onPressed: () {
+                                      loadUrl(textEditingController.text);
+                                    },
+                                  ),
+                                ),
+                                onSubmitted: (value) {
+                                  loadUrl(value);
+                                  focusNode.unfocus();
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      Expanded(
-                        child: TextField(
-                          focusNode: focusNode, // Use the FocusNode
-                          style: const TextStyle(color: Colors.black),
-                          controller: textEditingController,
-                          decoration: InputDecoration(
-                            helperStyle: const TextStyle(
-                              color: Colors.black,
-                            ),
-                            hintText: "Search or type web address",
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                            suffixIcon: IconButton(
-                              icon: const Icon(Icons.search, color: Colors.black),
-                              onPressed: () {
-                                loadUrl(textEditingController.text);
-                              },
-                            ),
-                          ),
-                          onSubmitted: (value) {
-                            loadUrl(value);
-                            focusNode.unfocus();
-                          },
+                      if (pageLoadProgress > 0 && pageLoadProgress < 1.0) // Add progress bar
+                        LinearProgressIndicator(
+                          value: pageLoadProgress,
+                          backgroundColor: Colors.grey[200],
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
                         ),
-                      ),
                     ],
                   ),
-                ),
-                actions: [
-                  IconButton(
-                    icon: Icon(Icons.bookmark_outline, color: bookmarks.contains(tabs[currentIndex].url) ? Colors.yellow : Colors.grey),
-                    onPressed: () {
-                      setState(() {
-                        if (bookmarks.contains(tabs[currentIndex].url)) {
-                          bookmarks.remove(tabs[currentIndex].url);
-                        } else {
-                          bookmarks.add(tabs[currentIndex].url);
-                        }
-                      });
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.menu),
-                    onPressed: () {
-                      showModalBottomSheet(
-                        context: context,
-                        builder: (context) {
-                          return Container(
-                            padding: const EdgeInsets.all(16.0),
-                            decoration: const BoxDecoration(
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(20.0),
-                                topRight: Radius.circular(20.0),
+                  actions: [
+                    IconButton(
+                      icon: Icon(Icons.bookmark_outline, color: bookmarks.contains(tabs[currentIndex].url) ? Colors.yellow : Colors.grey),
+                      onPressed: () {
+                        setState(() {
+                          if (bookmarks.contains(tabs[currentIndex].url)) {
+                            bookmarks.remove(tabs[currentIndex].url);
+                          } else {
+                            bookmarks.add(tabs[currentIndex].url);
+                          }
+                        });
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.menu),
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          builder: (context) {
+                            return Container(
+                              padding: const EdgeInsets.all(16.0),
+                              decoration: const BoxDecoration(
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(20.0),
+                                  topRight: Radius.circular(20.0),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black26,
+                                    blurRadius: 10.0,
+                                    spreadRadius: 5.0,
+                                  ),
+                                ],
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black26,
-                                  blurRadius: 10.0,
-                                  spreadRadius: 5.0,
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                  children: [
-                                    InkWell(
-                                      onTap: showBookmarksDialog,
-                                      child: const Column(
-                                        children: [
-                                          Icon(Icons.bookmark, size: 40, color: Colors.blue),
-                                          SizedBox(height: 8),
-                                          Text('Bookmark', style: TextStyle(fontSize: 14)),
-                                        ],
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                    children: [
+                                      InkWell(
+                                        onTap: showBookmarksDialog,
+                                        child: const Column(
+                                          children: [
+                                            Icon(Icons.bookmark, size: 40, color: Colors.blue),
+                                            SizedBox(height: 8),
+                                            Text('Bookmark', style: TextStyle(fontSize: 14)),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                    InkWell(
-                                      onTap: showHistoryDialog,
-                                      child: const Column(
-                                        children: [
-                                          Icon(Icons.history, size: 40, color: Colors.green),
-                                          SizedBox(height: 8),
-                                          Text('History', style: TextStyle(fontSize: 14)),
-                                        ],
+                                      InkWell(
+                                        onTap: showHistoryDialog,
+                                        child: const Column(
+                                          children: [
+                                            Icon(Icons.history, size: 40, color: Colors.green),
+                                            SizedBox(height: 8),
+                                            Text('History', style: TextStyle(fontSize: 14)),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                    InkWell(
-                                      onTap: () {
-                                        AdHelper.showInterstitialAd(onComplete: (){
+                                      InkWell(
+                                        onTap: () {
+                                          themeController.isDarkMode.value = !themeController.isDarkMode.value;
+                                        },
+                                        child: buildThemeToggle(),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 20),
+                                  const Divider(thickness: 2.0),
+                                  const SizedBox(height: 20),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                    children: [
+                                      InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            if (bookmarks.contains(tabs[currentIndex].url)) {
+                                              bookmarks.remove(tabs[currentIndex].url);
+                                            } else {
+                                              bookmarks.add(tabs[currentIndex].url);
+                                            }
+                                          });
                                           Navigator.pop(context);
-                                          themeController.toggleTheme();
-                                        });
-                                      },
-                                      child: Column(
-                                        children: [
-                                          Obx(() {
-                                            return Icon(
-                                              themeController.isDarkMode.value ? Icons.dark_mode : Icons.light_mode,
-                                              size: 40,
-                                              color: themeController.isDarkMode.value ? Colors.yellow : Colors.black,
-                                            );
-                                          }),
-                                          const SizedBox(height: 8),
-                                          Obx(() {
-                                            return Text(
-                                              themeController.isDarkMode.value ? 'Dark Mode' : 'Light Mode',
-                                              style: const TextStyle(fontSize: 14, ),
-                                            );
-                                          }),
-                                        ],
+                                        },
+                                        child: const Column(
+                                          children: [
+                                            Icon(Icons.save, size: 40, color: Colors.red),
+                                            SizedBox(height: 8),
+                                            Text('Save Page', style: TextStyle(fontSize: 14)),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(
-                                    height: 20),
-                                const Divider(
-
-                                  thickness: 2.0,
-                                ),
-                                const SizedBox(
-                                  height: 20,
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                  children: [
-                                    InkWell(
-                                      onTap: () {
-                                        setState(() {
-                                          if (bookmarks.contains(tabs[currentIndex].url)) {
-                                            bookmarks.remove(tabs[currentIndex].url);
-                                          } else {
-                                            bookmarks.add(tabs[currentIndex].url);
-                                          }
-                                        });
-                                        Navigator.pop(context);
-                                      },
-                                      child: const Column(
+                                      const Column(
                                         children: [
-                                          Icon(Icons.save, size: 40, color: Colors.red),
+                                          Icon(Icons.ad_units, size: 40, color: Colors.purple),
                                           SizedBox(height: 8),
-                                          Text('Save Page', style: TextStyle(fontSize: 14)),
+                                          Text('Block Ads', style: TextStyle(fontSize: 14)),
                                         ],
                                       ),
-                                    ),
-                                    const Column(
-                                      children: [
-                                        Icon(Icons.ad_units, size: 40, color: Colors.purple),
-                                        SizedBox(height: 8),
-                                        Text('Block Ads', style: TextStyle(fontSize: 14, )),
-                                      ],
-                                    ),
-                                    InkWell(
-                                      onTap: (){
-                                        Get.to(()=> Profile());
-                                      },
-                                      child: const Column(
-                                        children: [
-                                          Icon(Icons.person, size: 40, color: Colors.purple),
-                                          SizedBox(height: 8),
-                                          Text('User Profile', style: TextStyle(fontSize: 14, )),
-                                        ],
+                                      InkWell(
+                                        onTap: () {
+                                          Get.to(() => Profile());
+                                        },
+                                        child: const Column(
+                                          children: [
+                                            Icon(Icons.person, size: 40, color: Colors.purple),
+                                            SizedBox(height: 8),
+                                            Text('User Profile', style: TextStyle(fontSize: 14)),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-
-                                  ],
-                                ),
-                                const SizedBox(
-                                  height: 40,
-                                )
-                              ],
-                            ),
-                          );
-                        },
-                      );
-
-                    },
-                  ),
-                ],
+                                      InkWell(
+                                        onTap: showDownloadsDialog,
+                                        child: const Column(
+                                          children: [
+                                            Icon(Icons.download, size: 40, color: Colors.purple),
+                                            SizedBox(height: 8),
+                                            Text('Downloads', style: TextStyle(fontSize: 14)),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 40),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-
-
           body: Container(
-            decoration: const BoxDecoration(
-
-            ),
+            decoration: const BoxDecoration(),
             child: Column(
               children: [
-                Expanded(child: AnimatedOpacity(
-                  opacity: 1.0,
-                  duration: const Duration(milliseconds: 300),
-                  child: _buildCurrentPage(),
-                )),
+                Expanded(
+                  child: AnimatedOpacity(
+                    opacity: 1.0,
+                    duration: const Duration(milliseconds: 300),
+                    child: _buildCurrentPage(),
+                  ),
+                ),
                 _buildBottomWidget(),
               ],
             ),
@@ -404,15 +496,60 @@ class _BrowserPageState extends State<BrowserPage> {
     tabs[currentIndex].controller.loadRequest(uri);
   }
 
-
+  Widget buildThemeToggle() {
+    return Column(
+      children: [
+        Obx(() {
+          return Icon(
+            themeController.isDarkMode.value ? Icons.dark_mode : Icons.light_mode,
+            size: 40,
+            color: themeController.isDarkMode.value ? Colors.yellow : Colors.black,
+          );
+        }),
+        const SizedBox(height: 8),
+        Obx(() {
+          return Text(
+            themeController.isDarkMode.value ? 'Dark Mode' : 'Light Mode',
+            style: const TextStyle(fontSize: 14),
+          );
+        }),
+      ],
+    );
+  }
 
   Widget _buildCurrentPage() {
     if (tabs[currentIndex].url == searchEngineUrl && tabs.length == 1) {
       return _buildHomePage();
     } else {
-      return WebViewWidget(controller: tabs[currentIndex].controller);
+      return Stack(
+        children: [
+          WebViewWidget(controller: tabs[currentIndex].controller),
+          if (downloadProgress.isNotEmpty) ...[
+            Positioned(
+              bottom: 10,
+              left: 10,
+              right: 10,
+              child: Column(
+                children: [
+                  LinearProgressIndicator(
+                    value: double.parse(downloadProgress.replaceAll('%', '')) / 100,
+                    backgroundColor: Colors.grey,
+                    color: Colors.blue,
+                  ),
+                  SizedBox(height: 5),
+                  Text(
+                    'Download Progress: $downloadProgress',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      );
     }
   }
+
 
   Widget _buildHomePage() {
     return SingleChildScrollView(
@@ -485,12 +622,14 @@ class _BrowserPageState extends State<BrowserPage> {
               ),
             ),
             const SizedBox(height: 10),
-            Text(
-              speedDials[index]['title']!,
-              style: const TextStyle( fontWeight: FontWeight.bold, fontSize: 12),
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 2,
+            SingleChildScrollView(
+              child: Text(
+                speedDials[index]['title']!,
+                style: const TextStyle( fontWeight: FontWeight.bold, fontSize: 12),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+              ),
             ),
           ],
         ),
@@ -616,6 +755,68 @@ class _BrowserPageState extends State<BrowserPage> {
       ),
     );
   }
+
+  void showDownloadsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Downloaded Files'),
+              content: Container(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (downloadProgress.isNotEmpty) ...[
+                      LinearProgressIndicator(
+                        value: double.parse(downloadProgress.replaceAll('%', '')) / 100,
+                        backgroundColor: Colors.grey,
+                        color: Colors.blue,
+                      ),
+                      SizedBox(height: 5),
+                      Text(
+                        'Download Progress: $downloadProgress',
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    ],
+                    Expanded(
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: downloadedFiles.length,
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            title: Text(downloadedFiles[index].split('/').last),
+                            onTap: () async {
+                              OpenResult result = await OpenFile.open(downloadedFiles[index]);
+                              if (result.type != ResultType.done) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Cannot open this file')),
+                                );
+                              }
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Close'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+
 
   void showTabSwitcherDialog() {
     showDialog(
@@ -875,6 +1076,8 @@ class _BrowserPageState extends State<BrowserPage> {
       ),
     );
   }
+
+
 
   void showHistoryDialog() {
     showDialog<void>(
