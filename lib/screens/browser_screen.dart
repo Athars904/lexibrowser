@@ -51,14 +51,14 @@ class _BrowserPageState extends State<BrowserPage> {
   String searchEngineUrl = "https://www.google.com/";
   Set<String> bookmarks = {};
   List<Map<String, dynamic>> speedDials = [
-    {"title": "Google", "url": "https://www.google.com", "icon": "https://www.google.com/favicon.ico", "isAsset": false},
-    {"title": "Facebook", "url": "https://www.facebook.com", "icon": "https://www.facebook.com/favicon.ico", "isAsset": false},
-    {"title": "LinkedIn", "url": "https://www.linkedin.com", "icon": "https://www.linkedin.com/favicon.ico", "isAsset": false},
-    {"title": "Instagram", "url": "https://www.instagram.com", "icon": "https://www.instagram.com/favicon.ico", "isAsset": false},
-    {"title": "Gmail", "url": "https://mail.google.com", "icon": "https://mail.google.com/favicon.ico", "isAsset": false},
+    {"title": "Google", "url": "https://www.google.com", "icon": "assets/images/google.png", "isAsset": true},
+    {"title": "Facebook", "url": "https://www.facebook.com", "icon": "assets/images/fb.png", "isAsset": true},
+    {"title": "LinkedIn", "url": "https://www.linkedin.com", "icon": "assets/images/linkedin.png", "isAsset": true},
+    {"title": "Instagram", "url": "https://www.instagram.com", "icon": "assets/images/insta.png", "isAsset": true},
+    {"title": "Gmail", "url": "https://mail.google.com", "icon": "assets/images/mail.png", "isAsset": true},
     {"title": "Yahoo", "url": "https://www.yahoo.com", "icon": "https://www.yahoo.com/favicon.ico", "isAsset": false},
     {"title": "YouTube", "url": "https://www.youtube.com", "icon": "assets/images/youtube.png", "isAsset": true},
-    {"title": "TikTok", "url": "https://www.tiktok.com", "icon": "https://www.tiktok.com/favicon.ico", "isAsset": false},
+    {"title": "TikTok", "url": "https://www.tiktok.com", "icon": "assets/images/tiktok.png", "isAsset": true},
 
   ];
   Widget _buildThemeToggleButton() {
@@ -271,8 +271,8 @@ class _BrowserPageState extends State<BrowserPage> {
                           children: [
                             Padding(
                               padding: const EdgeInsets.only(left: 10.0),
-                              child: Image.network(
-                                'https://www.google.com/favicon.ico',
+                              child: Image.asset(
+                                'assets/images/google.png',
                                 width: 24,
                                 height: 24,
                               ),
@@ -375,7 +375,11 @@ class _BrowserPageState extends State<BrowserPage> {
                                       ),
                                       InkWell(
                                         onTap: () {
-                                          themeController.isDarkMode.value = !themeController.isDarkMode.value;
+                                          AdHelper.showInterstitialAd(onComplete: ()
+                                          {
+                                            themeController.isDarkMode.value = !themeController.isDarkMode.value;
+                                          });
+
                                         },
                                         child: buildThemeToggle(),
                                       ),

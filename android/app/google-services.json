@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "492813413032",
+    "project_id": "lexibrowser-76a25",
+    "storage_bucket": "lexibrowser-76a25.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:492813413032:android:37c1d7423eb927dbbcb09d",
+        "android_client_info": {
+          "package_name": "com.lexibrowser.official"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJQccGT0Og1h-UJ7nO7a4zJp-SIlWAg4E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
