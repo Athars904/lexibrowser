@@ -21,7 +21,9 @@ import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:open_file/open_file.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
-
+import 'package:lexibrowser/helpers/downloadable_extensions.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 final _adController=NativeAdController();
 class BrowserPage extends StatefulWidget {
   const BrowserPage({super.key});
@@ -52,6 +54,7 @@ class _BrowserPageState extends State<BrowserPage> {
   List<String> downloadedFiles = [];
   String searchEngineUrl = "https://www.google.com/";
   Set<String> bookmarks = {};
+  int urlLoadCount = 0;
   List<Map<String, dynamic>> speedDials = [
     {"title": "Google", "url": "https://www.google.com", "icon": "assets/images/google.png", "isAsset": true},
     {"title": "Facebook", "url": "https://www.facebook.com", "icon": "assets/images/fb.png", "isAsset": true},
@@ -62,7 +65,34 @@ class _BrowserPageState extends State<BrowserPage> {
     {"title": "YouTube", "url": "https://www.youtube.com", "icon": "assets/images/yt.png", "isAsset": true},
     {"title": "TikTok", "url": "https://www.tiktok.com", "icon": "assets/images/tiktok.png", "isAsset": true},
   ];
+  final List<String> commonSchemes = [
+    'mailto',
+    'tel',
+    'sms',
+    'whatsapp',
+    'market', // Play Store scheme
+  ];
 
+  final List<String> externalDomains = [
+    'wa.me', // WhatsApp web link
+    'play.google.com', // Play Store domain
+  ];
+
+  bool _shouldOpenExternally(String url) {
+    Uri uri = Uri.parse(url);
+
+    // Check if the URL scheme is in the common schemes list
+    if (!['http', 'https'].contains(uri.scheme)) {
+      return true;
+    }
+
+    // Check if the URL domain is in the external domains list
+    if (externalDomains.contains(uri.host)) {
+      return true;
+    }
+
+    return false;
+  }
 
 
   double opacityLevel = 1.0;
@@ -120,6 +150,17 @@ class _BrowserPageState extends State<BrowserPage> {
           tabs[currentIndex].isLoading = true;
           pageLoadProgress = 0.0; // Reset progress when page starts loading
           saveSession(); // Save the session when the page starts loading
+
+          // Increment the URL load count
+          urlLoadCount++;
+          if (urlLoadCount >= 5) {
+            // Reset the counter
+            urlLoadCount = 0;
+            // Display the interstitial ad
+            AdHelper.showInterstitialAd(onComplete: () {
+              // Optionally, perform any action after the ad is closed
+            });
+          }
         });
       },
       onProgress: (progress) {
@@ -141,12 +182,16 @@ class _BrowserPageState extends State<BrowserPage> {
         });
       },
       onNavigationRequest: (NavigationRequest request) {
+        if (_shouldOpenExternally(request.url)) {
+          _launchURL(request.url);
+          return NavigationDecision.prevent;
+        }
         if (_isDownloadable(request.url)) {
           downloadFile(request.url);
           return NavigationDecision.prevent;
         }
         setState(() {
-          saveSession(); // Save the session when a navigation request is made
+          saveSession();
         });
         return NavigationDecision.navigate;
       },
@@ -154,6 +199,14 @@ class _BrowserPageState extends State<BrowserPage> {
     controller.loadRequest(Uri.parse(url));
     return BrowserTab(controller: controller, url: url, bookmarks: {});
   }
+  Future<void> _launchURL(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
 
 
 
@@ -201,7 +254,12 @@ class _BrowserPageState extends State<BrowserPage> {
 
 
   bool _isDownloadable(String url) {
-    return url.endsWith('.pdf') || url.endsWith('.doc') || url.endsWith('.docx') || url.endsWith('.xls') || url.endsWith('.xlsx') || url.endsWith('.ppt') || url.endsWith('.pptx') || url.endsWith('.txt') || url.endsWith('.rtf') || url.endsWith('.csv') || url.endsWith('.zip') || url.endsWith('.rar') || url.endsWith('.7z') || url.endsWith('.tar') || url.endsWith('.gz') || url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.png') || url.endsWith('.gif') || url.endsWith('.bmp') || url.endsWith('.tiff') || url.endsWith('.svg') || url.endsWith('.mp3') || url.endsWith('.wav') || url.endsWith('.flac') || url.endsWith('.aac') || url.endsWith('.ogg') || url.endsWith('.wma') || url.endsWith('.mp4') || url.endsWith('.avi') || url.endsWith('.mov') || url.endsWith('.mkv') || url.endsWith('.wmv') || url.endsWith('.flv') || url.endsWith('.webm') || url.endsWith('.m4v') || url.endsWith('.html') || url.endsWith('.css') || url.endsWith('.js') || url.endsWith('.json') || url.endsWith('.xml') || url.endsWith('.yaml') || url.endsWith('.md') || url.endsWith('.markdown') || url.endsWith('.py') || url.endsWith('.c') || url.endsWith('.cpp') || url.endsWith('.h') || url.endsWith('.hpp') || url.endsWith('.java') || url.endsWith('.class') || url.endsWith('.cs') || url.endsWith('.swift') || url.endsWith('.kt') || url.endsWith('.kts') || url.endsWith('.rb') || url.endsWith('.pl') || url.endsWith('.php') || url.endsWith('.go') || url.endsWith('.rs') || url.endsWith('.ts') || url.endsWith('.tsx') || url.endsWith('.sh') || url.endsWith('.bat') || url.endsWith('.ps1') || url.endsWith('.sql') || url.endsWith('.r') || url.endsWith('.jl') || url.endsWith('.lua') || url.endsWith('.asm') || url.endsWith('.vb') || url.endsWith('.m') || url.endsWith('.mat') || url.endsWith('.sas') || url.endsWith('.scala') || url.endsWith('.groovy') || url.endsWith('.vbs') || url.endsWith('.htm') || url.endsWith('.tex') || url.endsWith('.rmd') || url.endsWith('.ipynb');
+    for (String extension in supportedFileExtensions) {
+      if (url.endsWith(extension)) {
+        return true;
+      }
+    }
+    return false;
 
   }
 
@@ -221,61 +279,79 @@ class _BrowserPageState extends State<BrowserPage> {
     }
     return directory?.path;
   }
+  Future<bool> storagePermission() async {
+    final DeviceInfoPlugin info = DeviceInfoPlugin();
+    final AndroidDeviceInfo androidInfo = await info.androidInfo;
+    final int androidVersion = int.parse(androidInfo.version.release);
+    bool havePermission = false;
 
-  void downloadFile(String url) async {
-    if (await Permission.storage.isDenied || await Permission.storage.isPermanentlyDenied) {
+    if (androidVersion >= 13) {
+      final request = await [
+        Permission.videos,
+        Permission.photos,
+        // Add other permissions as needed
+      ].request();
+
+      havePermission = request.values.every((status) => status == PermissionStatus.granted);
+    } else {
+      final status = await Permission.storage.request();
+      havePermission = status.isGranted;
+    }
+
+    if (!havePermission) {
+      await openAppSettings();
+    }
+
+    return havePermission;
+  }
+
+
+  Future<void> downloadFile(String url) async {
+    bool permissionGranted = await storagePermission();
+
+    if (!permissionGranted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Storage permission denied. Please enable it in settings.')),
       );
       return;
     }
 
-    var status = await Permission.storage.request();
-    if (status.isGranted) {
-      var dio = Dio();
-      var dir = await getDownloadPath(); // Use getDownloadPath method
+    var dio = Dio();
+    var dir = await getDownloadPath(); // Use getDownloadPath method
 
-      try {
-        String fileName = url.split('/').last;
-        String filePath = "$dir/$fileName"; // Use the download path
-        await dio.download(
-          url,
-          filePath,
-          onReceiveProgress: (received, total) {
-            if (total != -1) {
-              setState(() {
-                downloadProgress = (received / total * 100).toStringAsFixed(0) + "%";
-              });
-            }
-          },
-        );
-        setState(() {
-          downloadedFiles.add(filePath);
-          downloadProgress = ""; // Reset the progress
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Download completed: $fileName')),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Download failed: $e')),
-        );
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Storage permission denied')),
+    // Sanitize the file name by removing unsafe characters
+    String fileName = url.split('/').last.replaceAll(RegExp(r'[^\w\s-]'), '');
+    String filePath = "$dir/$fileName";
+
+    try {
+      await dio.download(
+        url,
+        filePath,
+        onReceiveProgress: (received, total) {
+          if (total != -1) {
+            setState(() {
+              downloadProgress = (received / total * 100).toStringAsFixed(0) + "%";
+            });
+          }
+        },
       );
-      if (status.isPermanentlyDenied) {
-        openAppSettings();
-      }
+      setState(() {
+        downloadedFiles.add(filePath);
+        downloadProgress = ""; // Reset the progress
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Download completed: $fileName')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Download failed: $e')),
+      );
     }
   }
 
 
 
-
-
-  @override
+    @override
   Widget build(BuildContext context) {
     _adController.ad=AdHelper.loadNativeAd(_adController);
     final ThemeController themeController=Get.find();
