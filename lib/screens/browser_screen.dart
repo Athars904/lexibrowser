@@ -72,6 +72,11 @@ class _BrowserPageState extends State<BrowserPage> {
   @override
   void initState() {
     super.initState();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     textEditingController = TextEditingController();
     focusNode = FocusNode();
 
@@ -385,118 +390,120 @@ class _BrowserPageState extends State<BrowserPage> {
                         showModalBottomSheet(
                           context: context,
                           builder: (context) {
-                            return Container(
-                              padding: const EdgeInsets.all(16.0),
-                              decoration: const BoxDecoration(
-                                borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(20.0),
-                                  topRight: Radius.circular(20.0),
+                            return SingleChildScrollView(
+                              child: Container(
+                                padding: const EdgeInsets.all(16.0),
+                                decoration: const BoxDecoration(
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(20.0),
+                                    topRight: Radius.circular(20.0),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black26,
+                                      blurRadius: 10.0,
+                                      spreadRadius: 5.0,
+                                    ),
+                                  ],
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black26,
-                                    blurRadius: 10.0,
-                                    spreadRadius: 5.0,
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                    children: [
-                                      InkWell(
-                                        onTap: showBookmarksDialog,
-                                        child: const Column(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                      children: [
+                                        InkWell(
+                                          onTap: showBookmarksDialog,
+                                          child: const Column(
+                                            children: [
+                                              Icon(Icons.bookmark, size: 40, color: Colors.blue),
+                                              SizedBox(height: 8),
+                                              Text('Bookmark', style: TextStyle(fontSize: 14)),
+                                            ],
+                                          ),
+                                        ),
+                                        InkWell(
+                                          onTap: showHistoryDialog,
+                                          child: const Column(
+                                            children: [
+                                              Icon(Icons.history, size: 40, color: Colors.green),
+                                              SizedBox(height: 8),
+                                              Text('History', style: TextStyle(fontSize: 14)),
+                                            ],
+                                          ),
+                                        ),
+                                        InkWell(
+                                          onTap: () {
+                                            AdHelper.showInterstitialAd(onComplete: ()
+                                            {
+                                              themeController.isDarkMode.value = !themeController.isDarkMode.value;
+                                            });
+                              
+                                          },
+                                          child: buildThemeToggle(),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 20),
+                                    const Divider(thickness: 2.0),
+                                    const SizedBox(height: 20),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                      children: [
+                                        InkWell(
+                                          onTap: () async {
+                                            setState(() {
+                                              if (bookmarks.contains(tabs[currentIndex].url)) {
+                                                bookmarks.remove(tabs[currentIndex].url);
+                                              } else {
+                                                bookmarks.add(tabs[currentIndex].url);
+                                              }
+                                            });
+                                            // Save bookmarks to shared preferences
+                                            await saveBookmarks();
+                                          },
+                                          child: const Column(
+                                            children: [
+                                              Icon(Icons.save, size: 40, color: Colors.red),
+                                              SizedBox(height: 8),
+                                              Text('Save Page', style: TextStyle(fontSize: 14)),
+                                            ],
+                                          ),
+                                        ),
+                                        const Column(
                                           children: [
-                                            Icon(Icons.bookmark, size: 40, color: Colors.blue),
+                                            Icon(Icons.ad_units, size: 40, color: Colors.purple),
                                             SizedBox(height: 8),
-                                            Text('Bookmark', style: TextStyle(fontSize: 14)),
+                                            Text('Block Ads', style: TextStyle(fontSize: 14)),
                                           ],
                                         ),
-                                      ),
-                                      InkWell(
-                                        onTap: showHistoryDialog,
-                                        child: const Column(
-                                          children: [
-                                            Icon(Icons.history, size: 40, color: Colors.green),
-                                            SizedBox(height: 8),
-                                            Text('History', style: TextStyle(fontSize: 14)),
-                                          ],
+                                        InkWell(
+                                          onTap: () {
+                                            Get.to(() => Profile());
+                                          },
+                                          child: const Column(
+                                            children: [
+                                              Icon(Icons.person, size: 40, color: Colors.indigo),
+                                              SizedBox(height: 8),
+                                              Text('User Profile', style: TextStyle(fontSize: 14)),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                      InkWell(
-                                        onTap: () {
-                                          AdHelper.showInterstitialAd(onComplete: ()
-                                          {
-                                            themeController.isDarkMode.value = !themeController.isDarkMode.value;
-                                          });
-
-                                        },
-                                        child: buildThemeToggle(),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 20),
-                                  const Divider(thickness: 2.0),
-                                  const SizedBox(height: 20),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                    children: [
-                                      InkWell(
-                                        onTap: () async {
-                                          setState(() {
-                                            if (bookmarks.contains(tabs[currentIndex].url)) {
-                                              bookmarks.remove(tabs[currentIndex].url);
-                                            } else {
-                                              bookmarks.add(tabs[currentIndex].url);
-                                            }
-                                          });
-                                          // Save bookmarks to shared preferences
-                                          await saveBookmarks();
-                                        },
-                                        child: const Column(
-                                          children: [
-                                            Icon(Icons.save, size: 40, color: Colors.red),
-                                            SizedBox(height: 8),
-                                            Text('Save Page', style: TextStyle(fontSize: 14)),
-                                          ],
+                                        InkWell(
+                                          onTap: showDownloadsDialog,
+                                          child: const Column(
+                                            children: [
+                                              Icon(Icons.download_outlined, size: 40, color: Colors.green),
+                                              SizedBox(height: 8),
+                                              Text('Downloads', style: TextStyle(fontSize: 14)),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                      const Column(
-                                        children: [
-                                          Icon(Icons.ad_units, size: 40, color: Colors.purple),
-                                          SizedBox(height: 8),
-                                          Text('Block Ads', style: TextStyle(fontSize: 14)),
-                                        ],
-                                      ),
-                                      InkWell(
-                                        onTap: () {
-                                          Get.to(() => Profile());
-                                        },
-                                        child: const Column(
-                                          children: [
-                                            Icon(Icons.person, size: 40, color: Colors.indigo),
-                                            SizedBox(height: 8),
-                                            Text('User Profile', style: TextStyle(fontSize: 14)),
-                                          ],
-                                        ),
-                                      ),
-                                      InkWell(
-                                        onTap: showDownloadsDialog,
-                                        child: const Column(
-                                          children: [
-                                            Icon(Icons.download_outlined, size: 40, color: Colors.green),
-                                            SizedBox(height: 8),
-                                            Text('Downloads', style: TextStyle(fontSize: 14)),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 40),
-                                ],
+                                      ],
+                                    ),
+                                    const SizedBox(height: 40),
+                                  ],
+                                ),
                               ),
                             );
                           },
@@ -508,20 +515,24 @@ class _BrowserPageState extends State<BrowserPage> {
               ),
             ),
           ),
-          body: Container(
-            decoration: const BoxDecoration(),
-            child: Column(
-              children: [
-                Expanded(
-                  child: AnimatedOpacity(
-                    opacity: 1.0,
-                    duration: const Duration(milliseconds: 300),
-                    child: _buildCurrentPage(),
-                  ),
+          body: OrientationBuilder(
+            builder: (context, orientation) {
+              return Container(
+                decoration: const BoxDecoration(),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: AnimatedOpacity(
+                        opacity: 1.0,
+                        duration: const Duration(milliseconds: 300),
+                        child: _buildCurrentPage(),
+                      ),
+                    ),
+                    _buildBottomWidget(),
+                  ],
                 ),
-                _buildBottomWidget(),
-              ],
-            ),
+              );
+            },
           ),
 
 
