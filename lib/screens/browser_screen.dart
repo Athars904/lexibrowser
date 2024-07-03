@@ -19,6 +19,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:open_file/open_file.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';
 
 final _adController=NativeAdController();
 class BrowserPage extends StatefulWidget {
@@ -56,18 +58,11 @@ class _BrowserPageState extends State<BrowserPage> {
     {"title": "LinkedIn", "url": "https://www.linkedin.com", "icon": "assets/images/linkedin.png", "isAsset": true},
     {"title": "Instagram", "url": "https://www.instagram.com", "icon": "assets/images/insta.png", "isAsset": true},
     {"title": "Gmail", "url": "https://mail.google.com", "icon": "assets/images/mail.png", "isAsset": true},
-    {"title": "Yahoo", "url": "https://www.yahoo.com", "icon": "https://www.yahoo.com/favicon.ico", "isAsset": false},
-    {"title": "YouTube", "url": "https://www.youtube.com", "icon": "assets/images/youtube.png", "isAsset": true},
+    {"title": "ChatGPT", "url": "https://chat.openai.com", "icon": "assets/images/gpt.png", "isAsset": true},
+    {"title": "YouTube", "url": "https://www.youtube.com", "icon": "assets/images/yt.png", "isAsset": true},
     {"title": "TikTok", "url": "https://www.tiktok.com", "icon": "assets/images/tiktok.png", "isAsset": true},
-
   ];
-  Widget _buildThemeToggleButton() {
-    final ThemeController themeController = Get.find();
-    return IconButton(
-      icon: Icon(themeController.isDarkMode.value ? Icons.dark_mode : Icons.light_mode),
-      onPressed: themeController.toggleTheme,
-    );
-  }
+
 
 
   double opacityLevel = 1.0;
@@ -93,11 +88,17 @@ class _BrowserPageState extends State<BrowserPage> {
     });
 
     tabs = [createNewTab(searchEngineUrl)];
+
+    // Load bookmarks when initializing the state
+    loadBookmarks();
+    loadHistory();
+    loadSession();
   }
 
 
   @override
   void dispose() {
+    saveSession();
     textEditingController.dispose();
     focusNode.dispose(); // Dispose of FocusNode
     super.dispose();
@@ -113,6 +114,7 @@ class _BrowserPageState extends State<BrowserPage> {
           tabs[currentIndex].url = url;
           tabs[currentIndex].isLoading = true;
           pageLoadProgress = 0.0; // Reset progress when page starts loading
+          saveSession(); // Save the session when the page starts loading
         });
       },
       onProgress: (progress) {
@@ -120,15 +122,17 @@ class _BrowserPageState extends State<BrowserPage> {
           pageLoadProgress = progress / 100.0; // Update progress
         });
       },
-      onPageFinished: (url) {
+      onPageFinished: (url) async {
         setState(() {
           tabs[currentIndex].url = url;
-          textEditingController.text = url; // Update the search bar with the current URL
+          textEditingController.text = url;
           tabs[currentIndex].isLoading = false;
-          pageLoadProgress = 0.0; // Reset progress when page finishes loading
+          pageLoadProgress = 0.0;
           if (!history.contains(url)) {
             history.add(url);
+            saveHistory(); // Save the updated history
           }
+          saveSession(); // Save the session when the page finishes loading
         });
       },
       onNavigationRequest: (NavigationRequest request) {
@@ -136,12 +140,59 @@ class _BrowserPageState extends State<BrowserPage> {
           downloadFile(request.url);
           return NavigationDecision.prevent;
         }
+        setState(() {
+          saveSession(); // Save the session when a navigation request is made
+        });
         return NavigationDecision.navigate;
       },
     ));
     controller.loadRequest(Uri.parse(url));
     return BrowserTab(controller: controller, url: url, bookmarks: {});
   }
+
+
+
+  Future<void> saveBookmarks() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setStringList('bookmarks', bookmarks.toList());
+  }
+
+  Future<void> loadBookmarks() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      bookmarks = prefs.getStringList('bookmarks')?.toSet() ?? {};
+    });
+  }
+  Future<void> loadHistory() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String>? savedHistory = prefs.getStringList('browsing_history');
+    if (savedHistory != null) {
+      setState(() {
+        history = savedHistory;
+      });
+    }
+  }
+  Future<void> saveSession() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> urls = tabs.map((tab) => tab.url).toList();
+    prefs.setStringList('open_tabs', urls);
+    prefs.setInt('current_index', currentIndex);
+  }
+  Future<void> loadSession() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String>? savedUrls = prefs.getStringList('open_tabs');
+    int? savedIndex = prefs.getInt('current_index');
+
+    if (savedUrls != null && savedUrls.isNotEmpty) {
+      setState(() {
+        tabs = savedUrls.map((url) => createNewTab(url)).toList();
+        currentIndex = savedIndex ?? 0;
+      });
+    } else {
+      tabs = [createNewTab(searchEngineUrl)];
+    }
+  }
+
 
 
   bool _isDownloadable(String url) {
@@ -316,7 +367,7 @@ class _BrowserPageState extends State<BrowserPage> {
                   actions: [
                     IconButton(
                       icon: Icon(Icons.bookmark_outline, color: bookmarks.contains(tabs[currentIndex].url) ? Colors.yellow : Colors.grey),
-                      onPressed: () {
+                      onPressed: () async {
                         setState(() {
                           if (bookmarks.contains(tabs[currentIndex].url)) {
                             bookmarks.remove(tabs[currentIndex].url);
@@ -324,6 +375,8 @@ class _BrowserPageState extends State<BrowserPage> {
                             bookmarks.add(tabs[currentIndex].url);
                           }
                         });
+                        // Save bookmarks to shared preferences
+                        await saveBookmarks();
                       },
                     ),
                     IconButton(
@@ -392,7 +445,7 @@ class _BrowserPageState extends State<BrowserPage> {
                                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                                     children: [
                                       InkWell(
-                                        onTap: () {
+                                        onTap: () async {
                                           setState(() {
                                             if (bookmarks.contains(tabs[currentIndex].url)) {
                                               bookmarks.remove(tabs[currentIndex].url);
@@ -400,7 +453,8 @@ class _BrowserPageState extends State<BrowserPage> {
                                               bookmarks.add(tabs[currentIndex].url);
                                             }
                                           });
-                                          Navigator.pop(context);
+                                          // Save bookmarks to shared preferences
+                                          await saveBookmarks();
                                         },
                                         child: const Column(
                                           children: [
@@ -423,7 +477,7 @@ class _BrowserPageState extends State<BrowserPage> {
                                         },
                                         child: const Column(
                                           children: [
-                                            Icon(Icons.person, size: 40, color: Colors.purple),
+                                            Icon(Icons.person, size: 40, color: Colors.indigo),
                                             SizedBox(height: 8),
                                             Text('User Profile', style: TextStyle(fontSize: 14)),
                                           ],
@@ -433,7 +487,7 @@ class _BrowserPageState extends State<BrowserPage> {
                                         onTap: showDownloadsDialog,
                                         child: const Column(
                                           children: [
-                                            Icon(Icons.download, size: 40, color: Colors.purple),
+                                            Icon(Icons.download_outlined, size: 40, color: Colors.green),
                                             SizedBox(height: 8),
                                             Text('Downloads', style: TextStyle(fontSize: 14)),
                                           ],
@@ -469,6 +523,8 @@ class _BrowserPageState extends State<BrowserPage> {
               ],
             ),
           ),
+
+
         ),
       ),
     );
@@ -484,12 +540,15 @@ class _BrowserPageState extends State<BrowserPage> {
 
   void loadUrl(String value) {
     Uri uri;
-    // Check if the value starts with "http://" or "https://" to determine if it's a valid URL
+    // Check if the value is a valid URL
     if (value.startsWith("http://") || value.startsWith("https://")) {
       uri = Uri.parse(value);
-    } else {
-      // If not, prepend "http://" to the value to create a valid URL
+    } else if (value.contains(".")) {
+      // If it contains a dot, assume it's a full domain
       uri = Uri.parse("http://$value");
+    } else {
+      // Otherwise, treat it as a search term and use a search engine
+      uri = Uri.parse("https://www.google.com/search?q=$value");
     }
 
     setState(() {
@@ -499,6 +558,7 @@ class _BrowserPageState extends State<BrowserPage> {
     });
     tabs[currentIndex].controller.loadRequest(uri);
   }
+
 
   Widget buildThemeToggle() {
     return Column(
@@ -707,12 +767,12 @@ class _BrowserPageState extends State<BrowserPage> {
   Widget _buildBottomWidget() {
     return Container(
       decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(
-            color: Colors.grey,
-            width: 1.0
+          border: Border(
+              top: BorderSide(
+                  color: Colors.grey,
+                  width: 1.0
+              )
           )
-        )
       ),
       child: Container(
         color: Colors.transparent,
@@ -820,6 +880,10 @@ class _BrowserPageState extends State<BrowserPage> {
     );
   }
 
+  Future<void> saveHistory() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setStringList('browsing_history', history);
+  }
 
 
   void showTabSwitcherDialog() {
@@ -946,6 +1010,7 @@ class _BrowserPageState extends State<BrowserPage> {
                                       currentIndex--;
                                     }
                                   }
+                                  saveSession();
                                 });
                                 Navigator.of(context).pop();
                                 showTabSwitcherDialog(); // Reopen dialog to reflect changes
@@ -1050,13 +1115,13 @@ class _BrowserPageState extends State<BrowserPage> {
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 ),
-
                 trailing: IconButton(
                   icon: const Icon(Icons.delete, color: Colors.redAccent),
-                  onPressed: () {
+                  onPressed: () async {
                     setState(() {
                       bookmarks.remove(bookmark);
                     });
+                    await saveBookmarks();
                     Navigator.pop(context);
                     showBookmarksDialog();
                   },
@@ -1087,8 +1152,6 @@ class _BrowserPageState extends State<BrowserPage> {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-
-
         title: const Text('History'),
         content: SizedBox(
           width: double.maxFinite,
@@ -1131,10 +1194,12 @@ class _BrowserPageState extends State<BrowserPage> {
             child: const Text('Close'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               setState(() {
                 history.clear();
               });
+              SharedPreferences prefs = await SharedPreferences.getInstance();
+              prefs.remove('browsing_history'); // Clear saved history
               Navigator.pop(context);
             },
             child: const Text('Clear History'),
@@ -1143,6 +1208,7 @@ class _BrowserPageState extends State<BrowserPage> {
       ),
     );
   }
+
 
 
 

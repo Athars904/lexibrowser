@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:lexibrowser/controllers/profile_controller.dart';
 import 'dart:io';
-import 'package:lexibrowser/screens/browser_screen.dart';
+import 'package:lexibrowser/controllers/profile_controller.dart';
 import 'package:lexibrowser/screens/privacy_policy.dart';
 import 'package:lexibrowser/screens/term_conditions.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Profile extends StatefulWidget {
   @override
@@ -16,6 +16,26 @@ class _ProfileState extends State<Profile> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final ProfileController profileController = Get.find();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    profileController.userName.value = prefs.getString('userName') ?? '';
+    profileController.description.value = prefs.getString('description') ?? '';
+    profileController.profileImagePath.value = prefs.getString('profileImagePath') ?? '';
+  }
+
+  Future<void> _saveProfile(String name, String description, String imagePath) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('userName', name);
+    await prefs.setString('description', description);
+    await prefs.setString('profileImagePath', imagePath);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +78,7 @@ class _ProfileState extends State<Profile> {
                     ),
                     onSubmitted: (value) {
                       profileController.saveProfile(value, profileController.description.value, profileController.profileImagePath.value);
+                      _saveProfile(value, profileController.description.value, profileController.profileImagePath.value);
                     },
                   ),
                 )
@@ -95,6 +116,11 @@ class _ProfileState extends State<Profile> {
                         value,
                         profileController.profileImagePath.value,
                       );
+                      _saveProfile(
+                        profileController.userName.value,
+                        value,
+                        profileController.profileImagePath.value,
+                      );
                     },
                   );
                 }),
@@ -104,9 +130,8 @@ class _ProfileState extends State<Profile> {
                 child: ListView(
                   children: [
                     InkWell(
-                      onTap: ()
-                      {
-                        Get.to(()=>PrivacyPolicyScreen());
+                      onTap: () {
+                        Get.to(() => PrivacyPolicyScreen());
                       },
                       child: Card(
                         margin: const EdgeInsets.only(left: 35, right: 35, bottom: 10),
@@ -119,12 +144,10 @@ class _ProfileState extends State<Profile> {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 10),
                     InkWell(
-                      onTap: ()
-                      {
-                        Get.to(()=>const TermsConditionsScreen());
+                      onTap: () {
+                        Get.to(() => const TermsConditionsScreen());
                       },
                       child: Card(
                         margin: const EdgeInsets.only(left: 35, right: 35, bottom: 10),
@@ -137,7 +160,6 @@ class _ProfileState extends State<Profile> {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 10),
                     InkWell(
                       onTap: () {
@@ -170,6 +192,11 @@ class _ProfileState extends State<Profile> {
     final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       profileController.saveProfile(
+        profileController.userName.value,
+        profileController.description.value,
+        pickedFile.path,
+      );
+      _saveProfile(
         profileController.userName.value,
         profileController.description.value,
         pickedFile.path,
