@@ -55,6 +55,7 @@ class _BrowserPageState extends State<BrowserPage> {
   String searchEngineUrl = "https://www.google.com/";
   Set<String> bookmarks = {};
   int urlLoadCount = 0;
+  String selectedSearchEngine = "google";
   List<Map<String, dynamic>> speedDials = [
     {"title": "Google", "url": "https://www.google.com", "icon": "assets/images/google.png", "isAsset": true},
     {"title": "Facebook", "url": "https://www.facebook.com", "icon": "assets/images/fb.png", "isAsset": true},
@@ -92,6 +93,19 @@ class _BrowserPageState extends State<BrowserPage> {
     }
 
     return false;
+  }
+  String getSearchEngineUrl() {
+    if (selectedSearchEngine == "bing") {
+      return "https://www.bing.com/";
+    }
+    return "https://www.google.com/";
+  }
+
+  String getSearchQueryUrl(String query) {
+    if (selectedSearchEngine == "bing") {
+      return "https://www.bing.com/search?q=$query";
+    }
+    return "https://www.google.com/search?q=$query";
   }
 
 
@@ -153,7 +167,7 @@ class _BrowserPageState extends State<BrowserPage> {
 
           // Increment the URL load count
           urlLoadCount++;
-          if (urlLoadCount >= 5) {
+          if (urlLoadCount >= 7) {
             // Reset the counter
             urlLoadCount = 0;
             // Display the interstitial ad
@@ -518,6 +532,30 @@ class _BrowserPageState extends State<BrowserPage> {
                                           },
                                           child: buildThemeToggle(),
                                         ),
+                                        InkWell(
+                                          onTap: () {
+                                            toggleSearchEngine();
+                                            Navigator.pop(context); // Close the bottom sheet
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('Search engine switched to ${selectedSearchEngine.capitalizeFirst}.')),
+                                            );
+                                          },
+                                          child: Column(
+                                            children: [
+                                              Icon(
+                                                selectedSearchEngine == "google" ? Icons.search : Icons.search_off,
+                                                size: 40,
+                                                color: selectedSearchEngine == "google" ? Colors.blue : Colors.green,
+                                              ),
+                                              SizedBox(height: 8),
+                                              Text(
+                                                'Switch to ${selectedSearchEngine == "google" ? "Bing" : "Google"}',
+                                                style: TextStyle(fontSize: 14),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+
                                       ],
                                     ),
                                     const SizedBox(height: 20),
@@ -634,8 +672,8 @@ class _BrowserPageState extends State<BrowserPage> {
       // If it contains a dot, assume it's a full domain
       uri = Uri.parse("http://$value");
     } else {
-      // Otherwise, treat it as a search term and use a search engine
-      uri = Uri.parse("https://www.google.com/search?q=$value");
+      // Otherwise, treat it as a search term and use the selected search engine
+      uri = Uri.parse(getSearchQueryUrl(value));
     }
 
     setState(() {
@@ -645,6 +683,18 @@ class _BrowserPageState extends State<BrowserPage> {
     });
     tabs[currentIndex].controller.loadRequest(uri);
   }
+
+  void toggleSearchEngine() {
+    setState(() {
+      if (selectedSearchEngine == "google") {
+        selectedSearchEngine = "bing";
+      } else {
+        selectedSearchEngine = "google";
+      }
+    });
+  }
+
+
 
 
   Widget buildThemeToggle() {
