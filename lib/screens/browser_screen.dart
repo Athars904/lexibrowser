@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:lexibrowser/helpers/adhelper.dart';
 import 'package:lexibrowser/screens/forums_screen.dart';
 import 'package:lexibrowser/screens/home_screen.dart';
+import 'package:lexibrowser/screens/subscriptionpage.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:get/get.dart';
 import 'package:lexibrowser/controllers/theme_controller.dart';
@@ -579,12 +580,16 @@ class _BrowserPageState extends State<BrowserPage> {
                                             ],
                                           ),
                                         ),
-                                        const Column(
-                                          children: [
-                                            Icon(Icons.ad_units, size: 40, color: Colors.purple),
-                                            SizedBox(height: 8),
-                                            Text('Block Ads', style: TextStyle(fontSize: 14)),
-                                          ],
+                                        InkWell(
+                                          onTap: ()
+                                          => Get.to(()=>const SubscriptionPage()),
+                                          child: const Column(
+                                            children: [
+                                              Icon(Icons.ad_units, size: 40, color: Colors.purple),
+                                              SizedBox(height: 8),
+                                              Text('Block Ads', style: TextStyle(fontSize: 14)),
+                                            ],
+                                          ),
                                         ),
                                         InkWell(
                                           onTap: () {

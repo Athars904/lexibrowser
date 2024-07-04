@@ -126,7 +126,13 @@ flutter:
     - assets/flags/
     - assets/images/
     - assets/lottie/
+    - assets/Impact-Font/
     - assets/images/br.png
+
+  fonts:
+    - family: Impact
+      fonts:
+        - asset: assets/Impact-Font/Impact.ttf
 
 
 flutter_launcher_icons:
