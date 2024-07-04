@@ -23,7 +23,7 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('⚡️Forums'),
+        title: const Text('⚡️Forums',),
         backgroundColor: Colors.lightBlueAccent,
       ),
       body: SafeArea(
@@ -68,7 +68,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             Container(
               decoration: kMessageContainerDecoration,
-              padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
@@ -87,7 +87,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.send),
+                    icon: const Icon(Icons.send),
                     color: Colors.lightBlueAccent,
                     onPressed: () {
                       if (messageTextController.text.isNotEmpty) {
@@ -139,10 +139,10 @@ class MessageBubble extends StatelessWidget {
                 CircleAvatar(
                   backgroundImage: profileImage.isNotEmpty
                       ? FileImage(File(profileImage))
-                      : AssetImage("assets/images/vpn2.png") as ImageProvider,
+                      : const AssetImage("assets/images/vpn2.png") as ImageProvider,
                 ),
               if (!isMe)
-                SizedBox(width: 8.0),
+                const SizedBox(width: 8.0),
               Text(
                 sender,
                 style: const TextStyle(
@@ -151,12 +151,12 @@ class MessageBubble extends StatelessWidget {
                 ),
               ),
               if (isMe)
-                SizedBox(width: 8.0),
+                const SizedBox(width: 8.0),
               if (isMe)
                 CircleAvatar(
                   backgroundImage: profileImage.isNotEmpty
                       ? FileImage(File(profileImage))
-                      : AssetImage("assets/images/vpn2.png") as ImageProvider,
+                      : const AssetImage("assets/images/vpn2.png") as ImageProvider,
                 ),
             ],
           ),

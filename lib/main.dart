@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:lexibrowser/screens/splash_screen.dart';
 import 'package:get/get.dart';
 import 'package:lexibrowser/helpers/pref.dart';
-import 'package:lexibrowser/screens/browser_screen.dart';
 import 'package:lexibrowser/controllers/theme_controller.dart'; // Add this import
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';

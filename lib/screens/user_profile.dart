@@ -6,7 +6,7 @@ import 'package:lexibrowser/controllers/profile_controller.dart';
 import 'package:lexibrowser/screens/privacy_policy.dart';
 import 'package:lexibrowser/screens/term_conditions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:cupertino_icons/cupertino_icons.dart';
 class Profile extends StatefulWidget {
   @override
   _ProfileState createState() => _ProfileState();
@@ -42,6 +42,19 @@ class _ProfileState extends State<Profile> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
+        appBar: AppBar(
+          leading: InkWell(
+            onTap: ()
+              {
+                Navigator.pop(context);
+              },
+              child: const Icon(Icons.keyboard_backspace_rounded)),
+          title: const Text('Profile',style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+            letterSpacing: 2.0,
+          )),
+        ),
         body: Container(
           color: Colors.white54,
           child: Column(

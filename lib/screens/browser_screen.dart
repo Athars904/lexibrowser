@@ -320,7 +320,7 @@ class _BrowserPageState extends State<BrowserPage> {
 
     if (!permissionGranted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Storage permission denied. Please enable it in settings.')),
+        const SnackBar(content: Text('Storage permission denied. Please enable it in settings.')),
       );
       return;
     }
@@ -450,7 +450,7 @@ class _BrowserPageState extends State<BrowserPage> {
                         LinearProgressIndicator(
                           value: pageLoadProgress,
                           backgroundColor: Colors.grey[200],
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
                         ),
                     ],
                   ),
@@ -542,10 +542,10 @@ class _BrowserPageState extends State<BrowserPage> {
                                                 size: 40,
                                                 color: selectedSearchEngine == "google" ? Colors.blue : Colors.green,
                                               ),
-                                              SizedBox(height: 8),
+                                              const SizedBox(height: 8),
                                               Text(
                                                 'Switch to ${selectedSearchEngine == "google" ? "Bing" : "Google"}',
-                                                style: TextStyle(fontSize: 14),
+                                                style: const TextStyle(fontSize: 14),
                                               ),
                                             ],
                                           ),
@@ -656,22 +656,22 @@ class _BrowserPageState extends State<BrowserPage> {
       return Future.value(false);
     } else {
       final shouldClose = await showDialog<bool>(
-        context: context,
         builder: (context) => AlertDialog(
           elevation: 2.0,
-          title: Text('Confirm Exit'),
-          content: Text('Are you sure you want to close the app?'),
+          title: const Text('Confirm Exit'),
+          content: const Text('Are you sure you want to close the app?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text('No'),
+              child: const Text('No'),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text('Yes'),
+              child: const Text('Yes'),
             ),
           ],
         ),
+        context: context,
       );
       return shouldClose ?? false;
     }
@@ -753,10 +753,10 @@ class _BrowserPageState extends State<BrowserPage> {
                     backgroundColor: Colors.grey,
                     color: Colors.blue,
                   ),
-                  SizedBox(height: 5),
+                  const SizedBox(height: 5),
                   Text(
                     'Download Progress: $downloadProgress',
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ],
               ),
@@ -980,7 +980,7 @@ class _BrowserPageState extends State<BrowserPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('Downloaded Files'),
+              title: const Text('Downloaded Files'),
               content: Container(
                 width: double.maxFinite,
                 child: Column(
@@ -992,10 +992,10 @@ class _BrowserPageState extends State<BrowserPage> {
                         backgroundColor: Colors.grey,
                         color: Colors.blue,
                       ),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 5),
                       Text(
                         'Download Progress: $downloadProgress',
-                        style: TextStyle(color: Colors.black),
+                        style: const TextStyle(color: Colors.black),
                       ),
                     ],
                     Expanded(
@@ -1009,7 +1009,7 @@ class _BrowserPageState extends State<BrowserPage> {
                               OpenResult result = await OpenFile.open(downloadedFiles[index]);
                               if (result.type != ResultType.done) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Cannot open this file')),
+                                  const SnackBar(content: Text('Cannot open this file')),
                                 );
                               }
                             },
@@ -1023,7 +1023,7 @@ class _BrowserPageState extends State<BrowserPage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('Close'),
+                  child: const Text('Close'),
                 ),
               ],
             );

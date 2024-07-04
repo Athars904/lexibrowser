@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lexibrowser/controllers/home_controller.dart';
 import 'package:lexibrowser/screens/location_screen.dart';
+import 'package:lexibrowser/screens/network_screen.dart';
 import 'package:lexibrowser/widgets/home_card.dart';
 import '../models/vpn_status.dart';
 import '../services/vpn_engine.dart';
@@ -43,6 +44,15 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
             ),
+            actions: [
+              IconButton(
+                  padding: const EdgeInsets.only(right: 8),
+                  onPressed: () => Get.to(() => const NetworkTestScreen()),
+                  icon: const Icon(
+                    CupertinoIcons.info,
+                    size: 27,
+                  )),
+            ],
           ),
           bottomNavigationBar: Semantics(
             button: true,
