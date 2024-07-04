@@ -10,51 +10,68 @@ import 'package:lexibrowser/helpers/adhelper.dart';
 late Size mq;
 
 class LocationScreen extends StatelessWidget {
-  LocationScreen({Key? key});
+  LocationScreen({Key? key}) : super(key: key);
 
-  final _controller = LocationController();
-  final _adController=NativeAdController();
+  final _controller = Get.put(LocationController());
+  final _adController = Get.put(NativeAdController());
 
   @override
   Widget build(BuildContext context) {
     if (_controller.vpnList.isEmpty) _controller.getVPNData();
     mq = MediaQuery.of(context).size;
-    _adController.ad=AdHelper.loadNativeAd(_adController);
-    return Obx(() => Scaffold(
-      bottomNavigationBar:
-      _adController.ad!=null&& _adController.adLoaded.isTrue?
-      SafeArea(child: SizedBox(height: 80,child: AdWidget(ad: _adController.ad!),)):null,
-      backgroundColor: Colors.transparent,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _controller.getVPNData(),
-        child: const Icon(Icons.refresh),
-      ),
-      body: Container(
-        padding: const EdgeInsets.all(20.0),
-        decoration: BoxDecoration(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(20.0),
-            topRight: Radius.circular(20.0),
+
+    return FutureBuilder(
+      future: loadAd(),
+      builder: (context, snapshot) {
+        return Obx(
+              () => Scaffold(
+            bottomNavigationBar: _adController.ad != null &&
+                _adController.adLoaded.isTrue
+                ? SafeArea(
+              child: SizedBox(
+                height: 80,
+                child: AdWidget(ad: _adController.ad!),
+              ),
+            )
+                : null,
+            backgroundColor: Colors.transparent,
+            floatingActionButton: FloatingActionButton(
+              onPressed: () => _controller.getVPNData(),
+              child: const Icon(Icons.refresh),
+            ),
+            body: Container(
+              padding: const EdgeInsets.all(20.0),
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20.0),
+                  topRight: Radius.circular(20.0),
+                ),
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.blueAccent.withOpacity(0.3), // Light blue accent
+                    Colors.grey.withOpacity(0.3) // Light grey
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: _controller.isLoading.value
+                  ? _loadingWidget()
+                  : _controller.vpnList.isEmpty
+                  ? _noVPNFound()
+                  : _vpnData(),
+            ),
           ),
-          gradient: LinearGradient(
-            colors: [
-              Colors.blueAccent.withOpacity(0.3), // Light blue accent
-              Colors.grey.withOpacity(0.3) // Light grey
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: _controller.isLoading.value
-            ? _loadingWidget()
-            : _controller.vpnList.isEmpty
-            ? _noVPNFound()
-            : _vpnData(),
-      ),
-    ));
+        );
+      },
+    );
   }
 
-  _vpnData() => ListView.builder(
+  Future<void> loadAd() async {
+    _adController.ad = await AdHelper.loadNativeAd(_adController);
+  }
+
+  Widget _vpnData() => ListView.builder(
     itemCount: _controller.vpnList.length,
     padding: EdgeInsets.only(
       top: mq.height * .02,
@@ -67,7 +84,7 @@ class LocationScreen extends StatelessWidget {
         VpnCard(vpn: _controller.vpnList[index]),
   );
 
-  _loadingWidget() => SizedBox(
+  Widget _loadingWidget() => SizedBox(
     width: double.infinity,
     height: double.infinity,
     child: Center(
@@ -89,7 +106,7 @@ class LocationScreen extends StatelessWidget {
     ),
   );
 
-  _noVPNFound() => const Center(
+  Widget _noVPNFound() => const Center(
     child: Text(
       'No VPN Servers Found',
       style: TextStyle(

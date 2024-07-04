@@ -363,7 +363,6 @@ class _BrowserPageState extends State<BrowserPage> {
 
     @override
   Widget build(BuildContext context) {
-    _adController.ad=AdHelper.loadNativeAd(_adController);
     final ThemeController themeController=Get.find();
     return SafeArea(
       child: WillPopScope(
