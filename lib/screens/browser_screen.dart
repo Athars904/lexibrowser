@@ -276,37 +276,31 @@ class _BrowserPageState extends State<BrowserPage> {
     return false;
 
   }
-
   Future<String?> getDownloadPath() async {
     Directory? directory;
     try {
       if (Platform.isIOS) {
         directory = await getApplicationDocumentsDirectory();
-      } else {
-        directory = Directory('/storage/emulated/0/Download');
-        // Put file in global download folder, if for an unknown reason it didn't exist, we fallback
-        // ignore: avoid_slow_async_io
-        if (!await directory.exists()) directory = await getExternalStorageDirectory();
+      } else if (Platform.isAndroid) {
+        directory = await getExternalStorageDirectory();
       }
     } catch (err, stack) {
-      print("Cannot get download folder path");
+      print("Cannot get download folder path: $err");
     }
     return directory?.path;
   }
+
+
+
   Future<bool> storagePermission() async {
     final DeviceInfoPlugin info = DeviceInfoPlugin();
     final AndroidDeviceInfo androidInfo = await info.androidInfo;
     final int androidVersion = int.parse(androidInfo.version.release);
     bool havePermission = false;
 
-    if (androidVersion >= 13) {
-      final request = await [
-        Permission.videos,
-        Permission.photos,
-        // Add other permissions as needed
-      ].request();
-
-      havePermission = request.values.every((status) => status == PermissionStatus.granted);
+    if (androidVersion >= 11) {
+      final status = await Permission.manageExternalStorage.request();
+      havePermission = status.isGranted;
     } else {
       final status = await Permission.storage.request();
       havePermission = status.isGranted;
@@ -318,6 +312,7 @@ class _BrowserPageState extends State<BrowserPage> {
 
     return havePermission;
   }
+
 
 
   Future<void> downloadFile(String url) async {
@@ -334,7 +329,7 @@ class _BrowserPageState extends State<BrowserPage> {
     var dir = await getDownloadPath(); // Use getDownloadPath method
 
     // Sanitize the file name by removing unsafe characters
-    String fileName = url.split('/').last.replaceAll(RegExp(r'[^\w\s-]'), '');
+    String fileName = url.split('/').last.replaceAll(RegExp(r'[^\w\s.-]'), '');
     String filePath = "$dir/$fileName";
 
     try {
@@ -659,9 +654,30 @@ class _BrowserPageState extends State<BrowserPage> {
     if (await tabs[currentIndex].controller.canGoBack()) {
       tabs[currentIndex].controller.goBack();
       return Future.value(false);
+    } else {
+      final shouldClose = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          elevation: 2.0,
+          title: Text('Confirm Exit'),
+          content: Text('Are you sure you want to close the app?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text('No'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text('Yes'),
+            ),
+          ],
+        ),
+      );
+      return shouldClose ?? false;
     }
-    return Future.value(true);
   }
+
+
 
   void loadUrl(String value) {
     Uri uri;

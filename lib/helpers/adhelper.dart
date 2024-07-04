@@ -4,6 +4,7 @@ import 'package:flutter/material.dart'; // Import the correct package for VoidCa
 import 'package:get/get.dart';
 import 'package:lexibrowser/controllers/nativeadcontroller.dart';
 import 'package:lexibrowser/helpers/messages.dart';
+
 class AdHelper {
   static Future<void> initAds() async {
     await MobileAds.instance.initialize();

@@ -4,8 +4,6 @@ import 'package:lexibrowser/helpers/adhelper.dart';
 import 'package:lexibrowser/screens/browser_screen.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lexibrowser/screens/home_screen.dart';
-
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -26,7 +24,7 @@ class _SplashScreenState extends State<SplashScreen> {
   AdHelper.precacheInterstitialAd();
   AdHelper.precacheNativeAd();
   AdHelper.loadAppOpen();
-      Get.off(() => BrowserPage());
+      Get.off(() => const BrowserPage());
     });
   }
 
@@ -34,9 +32,9 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.indigo[900]!, Colors.blue[600]!],
+            colors: [Colors.deepOrange, Colors.lightBlueAccent],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -50,8 +48,8 @@ class _SplashScreenState extends State<SplashScreen> {
                   Center(
                     child: Image.asset(
                       'assets/images/br.png',
-                      height: 300,
-                      width: 300,
+                      height: 250,
+                      width: 250,
                     ),
                   ),
                   const SizedBox(
