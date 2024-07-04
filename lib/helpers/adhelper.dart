@@ -4,7 +4,7 @@ import 'package:flutter/material.dart'; // Import the correct package for VoidCa
 import 'package:get/get.dart';
 import 'package:lexibrowser/controllers/nativeadcontroller.dart';
 import 'package:lexibrowser/helpers/messages.dart';
-
+import 'package:lexibrowser/helpers/remoteconfig.dart';
 class AdHelper {
   static Future<void> initAds() async {
     await MobileAds.instance.initialize();
@@ -14,10 +14,11 @@ class AdHelper {
   static NativeAd? _nativeAd;
   static bool _nativeAdLoaded = false;
   static void precacheInterstitialAd() {
-    log('Precache Interstitial Ad - Id: ca-app-pub-2759752580796233/7305042586');
+    log('Precache Interstitial Ad - Id: ${Config.interstitialAd}');
+    if (Config.hideAds) return;
 
     InterstitialAd.load(
-      adUnitId: 'ca-app-pub-2759752580796233/7305042586',
+      adUnitId: Config.interstitialAd,
       request:const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
@@ -45,7 +46,11 @@ class AdHelper {
   }
 
   static void showInterstitialAd({required VoidCallback onComplete}) {
-
+    if (Config.hideAds)
+    {
+      onComplete;
+      return;
+    }
     if (_interstitialAdLoaded && _interstitialAd != null) {
       _interstitialAd?.show();
       onComplete();
@@ -53,7 +58,7 @@ class AdHelper {
     }
     MyMessages.progress();
     InterstitialAd.load(
-      adUnitId: 'ca-app-pub-2759752580796233/7305042586',
+      adUnitId: Config.interstitialAd,
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
@@ -75,11 +80,14 @@ class AdHelper {
     );
   }
   static void precacheNativeAd() {
-    log('Precache Native Ad - Id: ca-app-pub-2759752580796233/5288634789');
-
+    log('Precache Native Ad - Id: ${Config.nativeAd}');
+    if(Config.hideAds)
+    {
+      return;
+    }
 
     _nativeAd = NativeAd(
-        adUnitId: 'ca-app-pub-2759752580796233/5288634789',
+        adUnitId: Config.nativeAd,
         listener: NativeAdListener(
           onAdLoaded: (ad) {
             log('$NativeAd loaded.');
@@ -104,12 +112,16 @@ class AdHelper {
   }
 
   static NativeAd? loadNativeAd(NativeAdController adController) {
+    if (Config.hideAds)
+    {
+      return null;
+    }
     if (_nativeAdLoaded && _nativeAd != null) {
       adController.adLoaded.value = true;
       return _nativeAd;
     }
     return NativeAd(
-        adUnitId: 'ca-app-pub-2759752580796233/5288634789',
+        adUnitId: Config.nativeAd,
         listener: NativeAdListener(
           onAdLoaded: (ad) {
             log('$NativeAd loaded.');
@@ -130,9 +142,10 @@ class AdHelper {
       ..load();
   }
   static AppOpenAd? loadAppOpen() {
+    if(Config.hideAds) return null;
     AppOpenAd? appOpenAd;
     AppOpenAd.load(
-      adUnitId: 'ca-app-pub-2759752580796233/3313826689',
+      adUnitId: Config.openAppAd,
       request: const AdRequest(),
       adLoadCallback: AppOpenAdLoadCallback(
         onAdLoaded: (ad) {
