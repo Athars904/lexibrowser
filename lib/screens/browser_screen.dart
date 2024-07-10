@@ -25,7 +25,9 @@ import 'package:flutter/services.dart';
 import 'package:lexibrowser/helpers/downloadable_extensions.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:media_store_plus/media_store_plus.dart';
 final _adController=NativeAdController();
+final mediaStorePlugin=MediaStore();
 class BrowserPage extends StatefulWidget {
   const BrowserPage({super.key});
 
@@ -138,12 +140,17 @@ class _BrowserPageState extends State<BrowserPage> {
     });
 
     tabs = [createNewTab(searchEngineUrl)];
+    WidgetsFlutterBinding.ensureInitialized();
+    MediaStore.ensureInitialized();
 
+    // Request permissions
+    requestPermissions();
     // Load bookmarks when initializing the state
     loadBookmarks();
     loadHistory();
     loadSession();
   }
+
 
 
   @override
@@ -222,7 +229,19 @@ class _BrowserPageState extends State<BrowserPage> {
     }
   }
 
+  Future<void> requestPermissions() async {
+    List<Permission> permissions = [
+      Permission.storage,
+    ];
 
+    if ((await mediaStorePlugin.getPlatformSDKInt()) >= 33) {
+      permissions.add(Permission.photos);
+      permissions.add(Permission.audio);
+      permissions.add(Permission.videos);
+    }
+
+    await permissions.request();
+  }
 
 
   Future<void> saveBookmarks() async {
@@ -277,41 +296,33 @@ class _BrowserPageState extends State<BrowserPage> {
     return false;
 
   }
-  Future<String?> getDownloadPath() async {
-    Directory? directory;
-    try {
-      if (Platform.isIOS) {
-        directory = await getApplicationDocumentsDirectory();
-      } else if (Platform.isAndroid) {
-        directory = await getExternalStorageDirectory();
-      }
-    } catch (err, stack) {
-      print("Cannot get download folder path: $err");
+  Future<String> getDownloadPath() async {
+    final Directory directory = Directory('/storage/emulated/0/Download');
+    if (await directory.exists()) {
+      return directory.path;
+    } else {
+      await directory.create(recursive: true);
+      return directory.path;
     }
-    return directory?.path;
   }
 
 
-
   Future<bool> storagePermission() async {
-    final DeviceInfoPlugin info = DeviceInfoPlugin();
-    final AndroidDeviceInfo androidInfo = await info.androidInfo;
-    final int androidVersion = int.parse(androidInfo.version.release);
-    bool havePermission = false;
-
-    if (androidVersion >= 11) {
-      final status = await Permission.manageExternalStorage.request();
-      havePermission = status.isGranted;
-    } else {
-      final status = await Permission.storage.request();
-      havePermission = status.isGranted;
+    if (Platform.isAndroid) {
+      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+      if (androidInfo.version.sdkInt >= 33) {
+        PermissionStatus photoStatus = await Permission.photos.status;
+        PermissionStatus audioStatus = await Permission.audio.status;
+        PermissionStatus videoStatus = await Permission.videos.status;
+        return photoStatus.isGranted &&
+            audioStatus.isGranted &&
+            videoStatus.isGranted;
+      }
+      PermissionStatus storageStatus = await Permission.storage.status;
+      return storageStatus.isGranted;
     }
-
-    if (!havePermission) {
-      await openAppSettings();
-    }
-
-    return havePermission;
+    return true;
   }
 
 
@@ -349,6 +360,8 @@ class _BrowserPageState extends State<BrowserPage> {
         downloadedFiles.add(filePath);
         downloadProgress = ""; // Reset the progress
       });
+      // Save file using MediaStore
+      await saveFileToMediaStore(filePath, fileName);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Download completed: $fileName')),
       );
@@ -359,9 +372,31 @@ class _BrowserPageState extends State<BrowserPage> {
     }
   }
 
+  Future<void> saveFileToMediaStore(String filePath, String fileName) async {
+    try {
+      DirType dirType = DirType.download; // Use appropriate DirType for your needs
+      if ((await mediaStorePlugin.getPlatformSDKInt()) >= 30) {
+        await mediaStorePlugin.saveFile(
+          tempFilePath: filePath,
+          dirType: dirType,
+          dirName: DirName.download, // Use appropriate DirName for your needs
+        );
+      } else {
+        // For devices with API level lower than 30, use a different method if necessary
+        await mediaStorePlugin.saveFile(
+          tempFilePath: filePath,
+          dirType: dirType,
+          dirName: DirName.download, // Use appropriate DirName for your needs
+        );
+      }
+    } catch (e) {
+      print("Error saving file to MediaStore: $e");
+    }
+  }
 
 
-    @override
+
+  @override
   Widget build(BuildContext context) {
     final ThemeController themeController=Get.find();
     return SafeArea(
@@ -523,7 +558,7 @@ class _BrowserPageState extends State<BrowserPage> {
                                             {
                                               themeController.isDarkMode.value = !themeController.isDarkMode.value;
                                             });
-                              
+
                                           },
                                           child: buildThemeToggle(),
                                         ),
